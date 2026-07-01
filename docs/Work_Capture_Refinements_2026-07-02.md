@@ -1,7 +1,7 @@
 # Work Capture 微調整メモ（2026-07-02）
 
 > **目的:** Phase 7 Dashboard MVP 以降に行った機能追加・UI 改善・配色刷新を、後から参照できるように整理したメモ。  
-> **対象コミット:** `bec9471`（Phase 7 MVP）〜 `a0e3a2f`（最新）
+> **対象コミット:** `bec9471`（Phase 7 MVP）〜 `067a797`（最新）
 
 ---
 
@@ -27,6 +27,7 @@
 | `bec9471` | Phase 7 Dashboard MVP（PC 2 ペイン + SP 今日やること） |
 | `e072bfa` | UI 文言からデバイス名を除去しラベルを統一 |
 | `a0e3a2f` | タスク削除・完了済み一覧とトライアド配色を追加 |
+| `067a797` | Execute 画面の Tertiary 配色を統一（本ドキュメント追記分） |
 
 ---
 
@@ -205,3 +206,129 @@ Dashboard / 今日やること（アンバー）
 | `Work_Capture_UI_Design.md` | §3-2 Dashboard、§2-9 SP 今日やること |
 | `Work_Capture_Development_Flow.md` | Phase 7 チェックリスト |
 | `Work_Capture_Session_Retrospective_2026-07-01.md` | 本番デプロイ〜 UI Brush UP まで |
+
+---
+
+## 11. 追加セッション：Execute 配色の見直し（`067a797`）
+
+トライアド導入（`a0e3a2f`）後、実機スクリーンショット（`/capture/tasks`）を UI デザイナー視点で評価し、Execute 画面の色混在を修正した。
+
+### 11-1. セッションの流れ
+
+```text
+Phase D — トライアド初回適用（a0e3a2f）
+  ├─ タスク削除 API + 完了済みタブ
+  ├─ Primary / Secondary / Tertiary トークン定義
+  ├─ フェーズ別 phase-colors.ts 導入
+  └─ push → Vercel デプロイ
+
+Phase E — 実機評価 → 配色修正（067a797）
+  ├─ SP「今日やること」画面のスクリーンショットを評価
+  ├─ 課題3点を特定（紫混在・薄さ・タブ不統一）
+  ├─ Execute 画面を Tertiary に統一
+  ├─ 本ドキュメント（§11）追記
+  └─ push → Vercel デプロイ
+```
+
+---
+
+### 11-2. 実機評価で見えた課題
+
+| # | 課題 | 画面での症状 | 原因（実装） |
+|---|------|------------|-------------|
+| 1 | **色の意味が混在** | タブはアンバー、選択カード背景は薄い紫 | 選択カードに `capture-surface`（hue 300°）を使用 |
+| 2 | **全体的に薄い** | アクセントが muted 中心で視線誘導が弱い | `primary/10`・`tertiary-muted/60` 等の低コントラスト |
+| 3 | **完了済みタブだけ色体系外** | 「完了済み」選択時に白背景 + グレーリング | `task-view-tabs.tsx` で Execute 色を未適用 |
+
+**評価の結論:** トライアドの設計思想は正しいが、Execute 画面で Capture 系サーフェスが漏れていた。
+
+---
+
+### 11-3. 修正内容（3点 + 追加）
+
+| 優先 | 修正 | 変更ファイル |
+|------|------|-------------|
+| ① | 選択カード背景を `capture-surface` → `tertiary-muted` 系に統一 | `task-card.tsx`, `phase-colors.ts`（`execute.selected` 追加） |
+| ② | アクティブタブに solid 強調（`ring-tertiary` + `font-semibold`） | `task-view-tabs.tsx`, `phase-colors.ts` |
+| ③ | 完了済みタブのアクティブ状態も `execute.navActive` | `task-view-tabs.tsx` |
+| ＋ | 完了ボタンを Tertiary solid（`bg-tertiary`） | `task-detail-content.tsx` |
+| ＋ | ヘッダータイトル・件数表示を Execute テキスト色に | `capture/tasks/page.tsx`, `dashboard/page.tsx` |
+| ＋ | `tertiary-muted` の彩度を微増 | `globals.css` |
+
+#### 修正前後（選択カード）
+
+```text
+【修正前】
+  タブ背景     … アンバー（Tertiary）✓
+  選択カード背景 … 薄紫（capture-surface）✗
+  選択左ボーダー … アンバー（Tertiary）✓
+  → 1枚のカードに紫 + オレンジが同居
+
+【修正後】
+  タブ・カード・ボタン … すべて Tertiary 系で統一
+  完了ボタン … bg-tertiary（solid アクセント）
+```
+
+#### `phase-colors.ts` への追加
+
+```typescript
+execute: {
+  navActive: "... ring-tertiary/35 font-semibold",
+  selected:  "border-l-4 border-l-tertiary bg-tertiary-muted/55 ring-1 ring-tertiary/25",
+}
+```
+
+---
+
+### 11-4. 変更ファイル（`067a797`）
+
+| ファイル | 変更内容 |
+|---------|---------|
+| `src/lib/utils/phase-colors.ts` | `execute.selected` 追加、`navActive` 強化 |
+| `src/components/dashboard/task-card.tsx` | 選択・ホバーを Tertiary 系に |
+| `src/components/dashboard/task-view-tabs.tsx` | タブ容器リング、完了済みタブ統一 |
+| `src/components/dashboard/task-detail-content.tsx` | 完了ボタン Tertiary solid |
+| `src/app/capture/tasks/page.tsx` | タイトル・件数の Execute 色 |
+| `src/app/dashboard/page.tsx` | 件数・左ペイン見出しの Execute 色 |
+| `src/app/globals.css` | `tertiary-muted` 彩度調整 |
+| `docs/Work_Capture_Refinements_2026-07-02.md` | 本追記 |
+
+---
+
+### 11-5. フェーズ別配色ルール（確定版）
+
+今後 UI を追加するときの指針。
+
+| フェーズ | 色 | 使う場面 | 使わない場面 |
+|---------|-----|---------|-------------|
+| Capture | Primary（紫） | マイク、録音、メイン CTA | Execute 画面のカード背景 |
+| Organize | Secondary（ティール） | Inbox カード、進捗、整理 UI | Dashboard タブ |
+| Execute | Tertiary（アンバー） | タスク一覧、完了ボタン、件数 | Inbox 左ボーダー |
+
+**原則:** 1画面 = 1フェーズ色。他フェーズの `capture-surface` 等を流用しない。
+
+---
+
+### 11-6. 残課題（配色まわり）
+
+| 項目 | 備考 |
+|------|------|
+| 優先度バッジの色分け | 高優先度だけ Tertiary 等 — 未着手 |
+| ダークモード実機確認 | トークン定義済み、Execute 画面の目視確認余地あり |
+| Inbox 選択カード | Secondary で統一済み — 問題なし |
+
+---
+
+## 12. 全体タイムライン（Phase 7 以降）
+
+```text
+bec9471  Phase 7 Dashboard MVP
+   ↓
+e072bfa  文言統一（デバイス名除去）
+   ↓
+a0e3a2f  タスク削除 + 完了済み一覧 + トライアド初回
+   ↓
+067a797  Execute 配色統一 + 本ドキュメント
+   ↓
+（次）   Phase 7 後半 — タスク編集 / 3 ペイン 等
+```
