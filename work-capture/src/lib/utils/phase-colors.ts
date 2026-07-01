@@ -11,6 +11,7 @@ export const phaseAccentClasses: Record<
     border: string;
     text: string;
     navActive: string;
+    selected?: string;
   }
 > = {
   capture: {
@@ -39,6 +40,9 @@ export const phaseAccentClasses: Record<
       "bg-tertiary-muted text-tertiary-muted-foreground hover:bg-tertiary-muted",
     border: "border-l-tertiary border-tertiary/40",
     text: "text-tertiary-muted-foreground",
-    navActive: "bg-tertiary-muted text-tertiary-muted-foreground shadow-sm",
+    navActive:
+      "bg-tertiary-muted text-tertiary-muted-foreground shadow-sm ring-1 ring-tertiary/35 font-semibold",
+    selected:
+      "border-l-4 border-l-tertiary bg-tertiary-muted/55 ring-1 ring-tertiary/25",
   },
 };

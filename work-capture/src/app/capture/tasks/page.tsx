@@ -11,6 +11,7 @@ import { TaskEmptyState } from "@/components/dashboard/task-empty-state";
 import { TaskListPanel } from "@/components/dashboard/task-list-panel";
 import { TaskViewTabs } from "@/components/dashboard/task-view-tabs";
 import { useTaskWorkspace } from "@/lib/hooks/use-task-workspace";
+import { phaseAccentClasses } from "@/lib/utils/phase-colors";
 
 export default function CaptureTasksPage() {
   const {
@@ -112,7 +113,11 @@ export default function CaptureTasksPage() {
         >
           <Menu className="size-5" />
         </Link>
-        <span className="text-sm font-semibold">{listTitle}</span>
+        <span
+          className={cn("text-sm font-semibold", phaseAccentClasses.execute.text)}
+        >
+          {listTitle}
+        </span>
         <Link
           href="/capture"
           className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
@@ -138,7 +143,7 @@ export default function CaptureTasksPage() {
       ) : (
         <>
           <div className="border-b px-4 py-3">
-            <p className="text-sm text-muted-foreground">
+            <p className={cn("text-sm", phaseAccentClasses.execute.text)}>
               {view === "completed"
                 ? `完了済み ${tasks.length} 件`
                 : `未完了 ${tasks.length} 件`}

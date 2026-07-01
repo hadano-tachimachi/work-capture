@@ -22,7 +22,7 @@ export function TaskViewTabs({
   return (
     <div
       className={cn(
-        "flex gap-1 rounded-xl bg-tertiary-muted/60 p-1",
+        "flex gap-1 rounded-xl bg-tertiary-muted/70 p-1 ring-1 ring-tertiary/20",
         className
       )}
     >
@@ -49,7 +49,7 @@ export function TaskViewTabs({
         className={cn(
           "min-w-0 flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
           view === "completed"
-            ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+            ? phaseAccentClasses.execute.navActive
             : "text-muted-foreground hover:text-foreground"
         )}
       >

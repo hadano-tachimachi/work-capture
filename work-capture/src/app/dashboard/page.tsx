@@ -11,6 +11,7 @@ import { TaskViewTabs } from "@/components/dashboard/task-view-tabs";
 import { PcWorkHeader } from "@/components/shared/pc-work-header";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { phaseAccentClasses } from "@/lib/utils/phase-colors";
 import type { TaskStatus } from "@/lib/services/tasks";
 
 type TaskRow = TaskSummary & {
@@ -202,12 +203,12 @@ export default function DashboardPage() {
           taskCount={todoTasks.length}
           trailing={
             view === "active" && tasks.length > 0 ? (
-              <span className="text-sm text-muted-foreground">
+              <span className={cn("text-sm", phaseAccentClasses.execute.text)}>
                 未完了 {tasks.length} 件
                 {holdTasks.length > 0 && `（保留 ${holdTasks.length}）`}
               </span>
             ) : view === "completed" && tasks.length > 0 ? (
-              <span className="text-sm text-muted-foreground">
+              <span className={cn("text-sm", phaseAccentClasses.execute.text)}>
                 完了済み {tasks.length} 件
               </span>
             ) : undefined
@@ -230,7 +231,12 @@ export default function DashboardPage() {
         ) : (
           <div className="flex flex-1 overflow-hidden">
             <aside className="flex w-72 shrink-0 flex-col overflow-y-auto border-r bg-muted/20 p-3">
-              <p className="mb-2 px-1 text-xs font-medium text-muted-foreground">
+              <p
+                className={cn(
+                  "mb-2 px-1 text-xs font-medium",
+                  phaseAccentClasses.execute.text
+                )}
+              >
                 {view === "completed" ? "完了済み" : "今日やること"}
               </p>
               <TaskListPanel

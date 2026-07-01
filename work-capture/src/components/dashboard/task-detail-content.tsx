@@ -172,7 +172,9 @@ export function TaskDetailContent({
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
                   size="lg"
-                  className="min-w-0 flex-1"
+                  className={cn(
+                    "min-w-0 flex-1 bg-tertiary text-tertiary-foreground hover:bg-tertiary/90"
+                  )}
                   onClick={onComplete}
                   disabled={saving}
                 >

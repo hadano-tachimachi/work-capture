@@ -71,8 +71,8 @@
   /* Tertiary — Amber 72° (Execute / Dashboard) */
   --tertiary: oklch(0.55 0.18 72);
   --tertiary-foreground: oklch(0.99 0 0);
-  --tertiary-muted: oklch(0.93 0.06 72);
-  --tertiary-muted-foreground: oklch(0.42 0.13 72);
+  --tertiary-muted: oklch(0.91 0.08 72);
+  --tertiary-muted-foreground: oklch(0.38 0.14 72);
   --muted: oklch(0.955 0.015 300);
   --muted-foreground: oklch(0.46 0.05 300);
   --accent: oklch(0.92 0.04 195);

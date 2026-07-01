@@ -35,12 +35,8 @@ export function TaskCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "w-full rounded-xl border bg-card p-3 text-left text-sm shadow-sm transition-colors hover:bg-capture-surface",
-        selected &&
-          cn(
-            "border-l-4 bg-capture-surface",
-            phaseAccentClasses.execute.border
-          ),
+        "w-full rounded-xl border bg-card p-3 text-left text-sm shadow-sm transition-colors hover:bg-tertiary-muted/35",
+        selected && phaseAccentClasses.execute.selected,
         task.status === "on_hold" && "opacity-80",
         task.status === "done" && "opacity-75",
         className
