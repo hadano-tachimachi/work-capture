@@ -1,0 +1,31 @@
+/** OpenAI / Claude 共通の JSON Schema（Zod schema と同型） */
+export const STRUCTURE_JSON_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    purpose: { type: ["string", "null"] },
+    background: { type: ["string", "null"] },
+    tasks: { type: "array", items: { type: "string" } },
+    due_date: { type: ["string", "null"] },
+    action_plan: { type: "array", items: { type: "string" } },
+    notes: { type: "array", items: { type: "string" } },
+    decisions: { type: "array", items: { type: "string" } },
+    next_action: { type: ["string", "null"] },
+    uncertainties: { type: "array", items: { type: "string" } },
+    project_candidates: { type: "array", items: { type: "string" } },
+    context_candidates: { type: "array", items: { type: "string" } },
+  },
+  required: [
+    "purpose",
+    "background",
+    "tasks",
+    "due_date",
+    "action_plan",
+    "notes",
+    "decisions",
+    "next_action",
+    "uncertainties",
+    "project_candidates",
+    "context_candidates",
+  ],
+} as const;

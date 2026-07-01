@@ -4,6 +4,7 @@ import { neon } from "@neondatabase/serverless";
 import { drizzle as drizzleNeon } from "drizzle-orm/neon-http";
 import fs from "fs";
 import path from "path";
+import { hasAnyProviderKey } from "@/lib/ai/providers/config";
 import * as pgSchema from "./schema";
 import { sqliteSchema } from "./schema-sqlite";
 
@@ -77,7 +78,7 @@ export function getDbMode(): DbMode {
 }
 
 export function isDevFallback(): boolean {
-  return getDbMode() === "sqlite" || !process.env.GEMINI_API_KEY;
+  return getDbMode() === "sqlite" || !hasAnyProviderKey();
 }
 
 export function getDb() {

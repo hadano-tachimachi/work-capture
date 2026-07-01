@@ -2,9 +2,12 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import {
   getActiveModelName,
+  getDefaultProvider,
+  parseAiProvider,
   PROMPT_VERSION,
   structureTranscript,
-} from "@/lib/ai/gemini";
+} from "@/lib/ai/providers";
+import { ProviderNotConfiguredError } from "@/lib/ai/types";
 import { getDb, getTables } from "@/lib/db";
 import {
   structuredOutputSchema,
@@ -14,7 +17,8 @@ import {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { captureId, transcript } = body;
+    const { captureId, transcript, provider: providerRaw } = body;
+    const provider = parseAiProvider(providerRaw) ?? getDefaultProvider();
 
     if (!captureId || !transcript?.trim()) {
       return NextResponse.json(
@@ -31,10 +35,13 @@ export async function POST(request: Request) {
     let validationStatus = "failed";
     let validationErrors: unknown = null;
 
+    let modelName = getActiveModelName(provider);
+
     try {
-      const result = await structureTranscript(transcript);
+      const result = await structureTranscript(transcript, provider);
       rawOutput = result.rawOutput;
       parsed = result.parsed;
+      modelName = result.modelName;
 
       const validation = structuredOutputSchema.safeParse(parsed);
       if (validation.success) {
@@ -58,6 +65,7 @@ export async function POST(request: Request) {
         validationErrors = validation.error.flatten();
       }
     } catch (error) {
+      if (error instanceof ProviderNotConfiguredError) throw error;
       validationErrors = {
         message: error instanceof Error ? error.message : "Unknown error",
       };
@@ -69,7 +77,7 @@ export async function POST(request: Request) {
       parsedJson: parsed,
       validationStatus,
       validationErrors,
-      modelName: getActiveModelName(),
+      modelName,
       promptVersion: PROMPT_VERSION,
     });
 
@@ -89,6 +97,16 @@ export async function POST(request: Request) {
       parsed,
     });
   } catch (error) {
+    if (error instanceof ProviderNotConfiguredError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          provider: error.provider,
+          code: "PROVIDER_NOT_CONFIGURED",
+        },
+        { status: 503 }
+      );
+    }
     console.error("Structure error:", error);
     return NextResponse.json(
       {

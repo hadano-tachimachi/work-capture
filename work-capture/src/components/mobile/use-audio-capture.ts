@@ -23,6 +23,7 @@ export function useAudioCapture() {
   const startTimeRef = useRef(0);
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
+  const liveTranscriptRef = useRef("");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [isRecording, setIsRecording] = useState(false);
@@ -46,6 +47,7 @@ export function useAudioCapture() {
   const startRecording = useCallback(async () => {
     setError("");
     setLiveTranscript("");
+    liveTranscriptRef.current = "";
     setElapsed(0);
 
     try {
@@ -91,6 +93,7 @@ export function useAudioCapture() {
           for (let i = 0; i < event.results.length; i++) {
             text += event.results[i][0].transcript;
           }
+          liveTranscriptRef.current = text;
           setLiveTranscript(text);
         };
         recognition.start();
@@ -104,7 +107,7 @@ export function useAudioCapture() {
   }, [cleanup]);
 
   const stopRecording = useCallback((): Promise<
-    | { blob: Blob; mimeType: string; durationSec: number }
+    | { blob: Blob; mimeType: string; durationSec: number; transcript: string }
     | { tooShort: true; durationSec: number }
     | null
   > => {
@@ -131,6 +134,7 @@ export function useAudioCapture() {
         setIsRecording(false);
         setIsStopping(false);
         setLiveTranscript("");
+        liveTranscriptRef.current = "";
         setElapsed(0);
         resolve({ tooShort: true, durationSec });
         return;
@@ -144,7 +148,12 @@ export function useAudioCapture() {
         setIsRecording(false);
         setIsStopping(false);
         mediaRecorderRef.current = null;
-        resolve({ blob, mimeType: mimeTypeRef.current, durationSec });
+        resolve({
+          blob,
+          mimeType: mimeTypeRef.current,
+          durationSec,
+          transcript: liveTranscriptRef.current.trim(),
+        });
       };
 
       recorder.stop();
@@ -163,6 +172,7 @@ export function useAudioCapture() {
     setIsRecording(false);
     setIsStopping(false);
     setLiveTranscript("");
+    liveTranscriptRef.current = "";
     setElapsed(0);
   }, [cleanup]);
 

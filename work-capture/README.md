@@ -10,6 +10,7 @@
 - shadcn/ui + Tailwind CSS
 - Neon PostgreSQL + Drizzle ORM
 - Gemini API（文字起こし・AI構造化）
+- OpenAI / Claude API（構造化・低コストモデル）
 - Zod バリデーション
 
 ## セットアップ
@@ -30,13 +31,18 @@ npm install
 cp .env.example .env.local
 ```
 
-- `GEMINI_API_KEY` — [Google AI Studio](https://aistudio.google.com/) で取得
+- `GEMINI_API_KEY` — [Google AI Studio](https://aistudio.google.com/apikey)（`gemini-2.0-flash`）
+- `OPENAI_API_KEY` — [OpenAI Platform](https://platform.openai.com/api-keys)（`gpt-4o-mini`）
+- `ANTHROPIC_API_KEY` — [Anthropic Console](https://console.anthropic.com/settings/keys)（`claude-3-5-haiku-latest`）
 - `DATABASE_URL` — [Neon](https://neon.tech/) の PostgreSQL 接続文字列
 
 | 設定 | 未設定時（開発） | 設定時 |
 |------|------------------|--------|
 | DATABASE_URL | `.data/work-capture.db`（SQLite） | Neon PostgreSQL |
-| GEMINI_API_KEY | モックAI（簡易構造化） | Gemini 本番API |
+| いずれかの AI キー | モック AI | 選択したプロバイダーの API |
+| 複数キー設定 | — | メニュー / 録音画面で切替可能 |
+
+文字起こしはブラウザ（Web Speech API）。**構造化のみ** AI API を使用します。
 
 ### 3. データベースマイグレーション
 

@@ -1,11 +1,10 @@
 import type { StructuredOutput } from "@/lib/validation/structure-schema";
+import { hasAnyProviderKey } from "@/lib/ai/providers/config";
 
 export const DEV_MODEL_NAME = "dev-mock";
 
 function isDevMockEnabled() {
-  return (
-    process.env.NODE_ENV === "development" && !process.env.GEMINI_API_KEY
-  );
+  return process.env.NODE_ENV === "development" && !hasAnyProviderKey();
 }
 
 function mockStructureFromText(transcript: string): StructuredOutput {
@@ -49,7 +48,7 @@ function mockStructureFromText(transcript: string): StructuredOutput {
 }
 
 export async function mockTranscribeAudio(): Promise<string> {
-  return "（開発モード）音声入力を受け付けました。GEMINI_API_KEY を設定すると本番の文字起こしが使えます。";
+  return "（開発モード）音声入力を受け付けました。API キーを設定すると本番 AI が使えます。";
 }
 
 export async function mockStructureTranscript(

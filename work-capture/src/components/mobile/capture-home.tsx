@@ -12,6 +12,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { MIN_RECORDING_SECONDS } from "@/lib/utils/capture-helpers";
+import { AiProviderSelector } from "@/components/shared/ai-provider-selector";
+import { useAiProvider } from "@/lib/hooks/use-ai-provider";
 import {
   hapticCaptureStart,
   hapticCaptureStop,
@@ -27,9 +29,11 @@ export function CaptureHome() {
     blob: Blob;
     mimeType: string;
     durationSec: number;
+    transcript: string;
   } | null>(null);
 
   const [shortRecordingHint, setShortRecordingHint] = useState(false);
+  const { provider, setProvider, providers } = useAiProvider();
 
   const {
     isRecording,
@@ -74,6 +78,8 @@ export function CaptureHome() {
         durationSec={finishedData.durationSec}
         blob={finishedData.blob}
         mimeType={finishedData.mimeType}
+        transcript={finishedData.transcript}
+        provider={provider}
         onError={() => {
           setFinishedData(null);
           setPhase("capture");
@@ -160,7 +166,14 @@ export function CaptureHome() {
       </main>
 
       {!isRecording && (
-        <footer className="border-t px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <footer className="space-y-3 border-t px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          {providers.length > 0 && (
+            <AiProviderSelector
+              provider={provider}
+              providers={providers}
+              onChange={setProvider}
+            />
+          )}
           <Button
             variant="outline"
             className="w-full gap-2"
@@ -172,7 +185,11 @@ export function CaptureHome() {
         </footer>
       )}
 
-      <TextInputSheet open={textOpen} onOpenChange={setTextOpen} />
+      <TextInputSheet
+        open={textOpen}
+        onOpenChange={setTextOpen}
+        provider={provider}
+      />
     </MobileShell>
   );
 }

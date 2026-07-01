@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, Bot, CheckCircle2, Loader2 } from "lucide-react";
 import { StatusScreen } from "@/components/mobile/status-screen";
 import { Button } from "@/components/ui/button";
+import type { AiProvider } from "@/lib/ai/types";
 
 function formatDuration(seconds: number) {
   const m = Math.floor(seconds / 60)
@@ -20,6 +21,8 @@ type RecordingFinishedViewProps = {
   durationSec: number;
   blob: Blob;
   mimeType: string;
+  transcript: string;
+  provider: AiProvider;
   onError: () => void;
 };
 
@@ -27,6 +30,8 @@ export function RecordingFinishedView({
   durationSec,
   blob,
   mimeType,
+  transcript,
+  provider,
   onError,
 }: RecordingFinishedViewProps) {
   const router = useRouter();
@@ -36,15 +41,26 @@ export function RecordingFinishedView({
 
   async function upload() {
     const formData = new FormData();
+    if (transcript.trim()) {
+      formData.append("transcript", transcript.trim());
+    }
     formData.append("audio", blob, "recording.webm");
     formData.append("mimeType", mimeType);
+    formData.append("provider", provider);
 
     const res = await fetch("/api/capture", {
       method: "POST",
       body: formData,
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "アップロードに失敗しました");
+    if (!res.ok) {
+      if (data.code === "PROVIDER_NOT_CONFIGURED") {
+        throw new Error(
+          `${data.error}。メニューから利用可能な AI を選択してください。`
+        );
+      }
+      throw new Error(data.error || "アップロードに失敗しました");
+    }
     router.replace(`/capture/review/${data.id}`);
   }
 
@@ -58,7 +74,7 @@ export function RecordingFinishedView({
       );
       setPhase("error");
     });
-  }, [blob, mimeType, router]);
+  }, [blob, mimeType, transcript, provider, router]);
 
   if (phase === "error") {
     return (
@@ -108,7 +124,7 @@ export function RecordingFinishedView({
       </p>
       <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
         <Bot className="size-4 animate-pulse text-primary" />
-        <span>文字起こし・構造化を実行中…</span>
+        <span>構造化を実行中…</span>
       </div>
     </StatusScreen>
   );

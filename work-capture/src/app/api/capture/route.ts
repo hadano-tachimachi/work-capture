@@ -3,6 +3,15 @@ import {
   processAudioCapture,
   processTextCapture,
 } from "@/lib/services/capture";
+import {
+  getDefaultProvider,
+  parseAiProvider,
+} from "@/lib/ai/providers";
+import { ProviderNotConfiguredError } from "@/lib/ai/types";
+
+function resolveProvider(body: Record<string, unknown>) {
+  return parseAiProvider(body.provider) ?? getDefaultProvider();
+}
 
 export async function POST(request: Request) {
   try {
@@ -14,23 +23,47 @@ export async function POST(request: Request) {
       if (!text) {
         return NextResponse.json({ error: "text is required" }, { status: 400 });
       }
-      const result = await processTextCapture(text);
+      const provider = resolveProvider(body);
+      const result = await processTextCapture(text, { provider });
       return NextResponse.json(result);
     }
 
     const formData = await request.formData();
     const audio = formData.get("audio");
     const mimeType = (formData.get("mimeType") as string) || "audio/webm";
+    const browserTranscript = (formData.get("transcript") as string) || "";
+    const provider =
+      parseAiProvider(formData.get("provider")) ?? getDefaultProvider();
 
-    if (!(audio instanceof Blob)) {
-      return NextResponse.json({ error: "audio is required" }, { status: 400 });
+    let audioBase64: string | undefined;
+    if (audio instanceof Blob && audio.size > 0) {
+      const buffer = Buffer.from(await audio.arrayBuffer());
+      audioBase64 = buffer.toString("base64");
     }
 
-    const buffer = Buffer.from(await audio.arrayBuffer());
-    const audioBase64 = buffer.toString("base64");
-    const result = await processAudioCapture(audioBase64, mimeType);
+    if (!browserTranscript.trim() && !audioBase64) {
+      return NextResponse.json(
+        { error: "transcript or audio is required" },
+        { status: 400 }
+      );
+    }
+
+    const result = await processAudioCapture(
+      { browserTranscript, audioBase64, mimeType },
+      { provider }
+    );
     return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof ProviderNotConfiguredError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          provider: error.provider,
+          code: "PROVIDER_NOT_CONFIGURED",
+        },
+        { status: 503 }
+      );
+    }
     console.error("Capture error:", error);
     return NextResponse.json(
       {

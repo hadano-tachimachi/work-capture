@@ -1,10 +1,15 @@
 import { eq, inArray } from "drizzle-orm";
+import { mockTranscribeAudio } from "@/lib/ai/dev-mock";
 import {
   getActiveModelName,
   PROMPT_VERSION,
   structureTranscript,
-  transcribeAudio,
-} from "@/lib/ai/gemini";
+  transcribeWithGemini,
+  hasAnyProviderKey,
+  isProviderConfigured,
+} from "@/lib/ai/providers";
+import type { AiProvider } from "@/lib/ai/types";
+import { ProviderNotConfiguredError } from "@/lib/ai/types";
 import { getDb, getTables } from "@/lib/db";
 import {
   structuredOutputSchema,
@@ -19,8 +24,38 @@ export type ProcessCaptureResult = {
   validationErrors: unknown;
 };
 
+export type CaptureOptions = {
+  provider: AiProvider;
+};
+
+async function resolveTranscriptFromAudio(
+  browserTranscript: string | undefined,
+  audioBase64: string | undefined,
+  mimeType: string
+): Promise<string> {
+  const trimmed = browserTranscript?.trim();
+  if (trimmed) return trimmed;
+
+  if (audioBase64 && isProviderConfigured("gemini")) {
+    return transcribeWithGemini(audioBase64, mimeType);
+  }
+
+  if (
+    audioBase64 &&
+    process.env.NODE_ENV === "development" &&
+    !hasAnyProviderKey()
+  ) {
+    return mockTranscribeAudio();
+  }
+
+  throw new Error(
+    "ブラウザの文字起こしが利用できません。Chrome / Edge をお試しいただくか、テキスト入力をご利用ください。"
+  );
+}
+
 export async function processTextCapture(
-  text: string
+  text: string,
+  options: CaptureOptions
 ): Promise<ProcessCaptureResult> {
   const db = getDb();
   const { workCaptures } = getTables();
@@ -34,37 +69,42 @@ export async function processTextCapture(
     })
     .returning();
 
-  return processStructure(capture.id, text);
+  return processStructure(capture.id, text, options.provider);
 }
 
 export async function processAudioCapture(
-  audioBase64: string,
-  mimeType: string
+  params: {
+    browserTranscript?: string;
+    audioBase64?: string;
+    mimeType: string;
+  },
+  options: CaptureOptions
 ): Promise<ProcessCaptureResult> {
   const db = getDb();
   const { workCaptures } = getTables();
 
+  const transcript = await resolveTranscriptFromAudio(
+    params.browserTranscript,
+    params.audioBase64,
+    params.mimeType
+  );
+
   const [capture] = await db
     .insert(workCaptures)
     .values({
+      transcriptText: transcript,
       inputType: "audio",
       status: "transcribed",
     })
     .returning();
 
-  const transcript = await transcribeAudio(audioBase64, mimeType);
-
-  await db
-    .update(workCaptures)
-    .set({ transcriptText: transcript, status: "transcribed" })
-    .where(eq(workCaptures.id, capture.id));
-
-  return processStructure(capture.id, transcript);
+  return processStructure(capture.id, transcript, options.provider);
 }
 
 async function processStructure(
   captureId: string,
-  transcript: string
+  transcript: string,
+  provider: AiProvider
 ): Promise<ProcessCaptureResult> {
   const db = getDb();
   const { workCaptures, structuredItems, aiParseResults } = getTables();
@@ -73,11 +113,13 @@ async function processStructure(
   let parsed: unknown = null;
   let validationStatus = "failed";
   let validationErrors: unknown = null;
+  let modelName = getActiveModelName(provider);
 
   try {
-    const result = await structureTranscript(transcript);
+    const result = await structureTranscript(transcript, provider);
     rawOutput = result.rawOutput;
     parsed = result.parsed;
+    modelName = result.modelName;
 
     const validation = structuredOutputSchema.safeParse(parsed);
     if (validation.success) {
@@ -98,6 +140,9 @@ async function processStructure(
       validationErrors = validation.error.flatten();
     }
   } catch (error) {
+    if (error instanceof ProviderNotConfiguredError) {
+      throw error;
+    }
     validationErrors = {
       message: error instanceof Error ? error.message : "Unknown error",
     };
@@ -109,7 +154,7 @@ async function processStructure(
     parsedJson: parsed,
     validationStatus,
     validationErrors,
-    modelName: getActiveModelName(),
+    modelName,
     promptVersion: PROMPT_VERSION,
   });
 
