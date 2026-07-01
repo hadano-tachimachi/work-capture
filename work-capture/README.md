@@ -31,7 +31,7 @@ npm install
 cp .env.example .env.local
 ```
 
-- `GEMINI_API_KEY` — [Google AI Studio](https://aistudio.google.com/apikey)（`gemini-2.0-flash`）
+- `GEMINI_API_KEY` — [Google AI Studio](https://aistudio.google.com/apikey)（`gemini-3.1-flash-lite`）
 - `OPENAI_API_KEY` — [OpenAI Platform](https://platform.openai.com/api-keys)（`gpt-4o-mini`）
 - `ANTHROPIC_API_KEY` — [Anthropic Console](https://console.anthropic.com/settings/keys)（`claude-3-5-haiku-latest`）
 - `DATABASE_URL` — [Neon](https://neon.tech/) の PostgreSQL 接続文字列

@@ -1,5 +1,6 @@
 import type { StructuredOutput } from "@/lib/validation/structure-schema";
 import { hasAnyProviderKey } from "@/lib/ai/providers/config";
+import { normalizeDueDateValue } from "@/lib/utils/date-helpers";
 
 export const DEV_MODEL_NAME = "dev-mock";
 
@@ -36,7 +37,7 @@ function mockStructureFromText(transcript: string): StructuredOutput {
     purpose: sentences[0] ?? transcript.slice(0, 80),
     background: notes[0] ?? null,
     tasks: tasks.length > 0 ? tasks.slice(0, 6) : [sentences[0] ?? transcript],
-    due_date: dueMatch?.[1] ?? null,
+    due_date: normalizeDueDateValue(dueMatch?.[0] ?? null),
     action_plan: tasks.slice(0, 5),
     notes: notes.length > 0 ? notes : [],
     decisions,

@@ -10,11 +10,13 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { SectionCard } from "@/components/shared/section-card";
+import { ValidationFailedAlert } from "@/components/shared/validation-failed-alert";
 import { EditTasksSheet } from "@/components/mobile/edit-tasks-sheet";
 import { EditDeadlineSheet } from "@/components/mobile/edit-deadline-sheet";
 import { EditMemoSheet } from "@/components/mobile/edit-memo-sheet";
 import { EditNextStepSheet } from "@/components/mobile/edit-next-step-sheet";
 import { ITEM_TYPE_LABELS } from "@/lib/utils/capture-helpers";
+import { formatDueDateDisplay, normalizeDueDateValue } from "@/lib/utils/date-helpers";
 import { cn } from "@/lib/utils";
 
 type StructuredItem = {
@@ -101,7 +103,8 @@ export function ReviewView({ captureId }: ReviewViewProps) {
   }
 
   const tasks = getByType("task");
-  const dueDate = getByType("due_date")[0] ?? "";
+  const dueDateRaw = getByType("due_date")[0] ?? "";
+  const dueDate = normalizeDueDateValue(dueDateRaw) ?? "";
   const memos = getByType("note");
   const nextAction = getByType("next_action")[0] ?? "";
   const decisions = getByType("decision");
@@ -143,11 +146,11 @@ export function ReviewView({ captureId }: ReviewViewProps) {
       </header>
 
       <main className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pb-28">
-        {validationStatus === "failed" && (
-          <div className="rounded-xl border border-destructive/50 bg-destructive/10 p-3 text-sm">
-            AI解析の検証に失敗しました。内容を確認・修正して登録できます。
-          </div>
-        )}
+        <ValidationFailedAlert
+          captureId={captureId}
+          validationStatus={validationStatus}
+          message="AI解析の検証に失敗しました。内容を確認・修正して登録できます。"
+        />
 
         <Collapsible open={transcriptOpen} onOpenChange={setTranscriptOpen}>
           <CollapsibleTrigger className="flex w-full items-center justify-between rounded-xl border bg-capture-surface px-4 py-3 text-sm font-medium">
@@ -210,7 +213,9 @@ export function ReviewView({ captureId }: ReviewViewProps) {
 
         <SectionCard
           label={ITEM_TYPE_LABELS.due_date}
-          preview={dueDate || "タップして期限を設定"}
+          preview={
+            dueDate ? formatDueDateDisplay(dueDate) : "タップして期限を設定"
+          }
           onClick={() => setOpenSheet("deadline")}
         />
 

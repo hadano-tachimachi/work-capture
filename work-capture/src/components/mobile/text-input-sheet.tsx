@@ -9,7 +9,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { SpeechTextarea } from "@/components/shared/speech-input";
 
 import type { AiProvider } from "@/lib/ai/types";
 
@@ -70,11 +70,11 @@ export function TextInputSheet({
           <SheetTitle>テキストで追加</SheetTitle>
         </SheetHeader>
         <div className="mt-4 flex flex-1 flex-col gap-4">
-          <Textarea
+          <SpeechTextarea
             placeholder="思いついたことを入力…"
             className="min-h-40 flex-1 resize-none"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={setText}
           />
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button onClick={handleSubmit} disabled={loading || !text.trim()}>

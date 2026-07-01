@@ -99,20 +99,17 @@ export function CaptureHome() {
         ) : undefined
       }
     >
-      <main className="flex flex-1 flex-col items-center px-6 pb-4 pt-4">
-        <CaptureMicButton
-          variant={isRecording ? "recording" : "idle"}
-          onClick={handleMicTap}
-          disabled={isStopping}
-          className="mb-8"
-        />
-
-        <p className="mb-2 text-lg font-semibold">
-          {isRecording ? "タップして録音終了" : "タップして録音開始"}
-        </p>
-
+      <main className="flex min-h-0 flex-1 flex-col">
         {isRecording ? (
-          <>
+          <div className="flex min-h-0 flex-1 flex-col items-center px-6 pb-4 pt-4">
+            <CaptureMicButton
+              variant="recording"
+              onClick={handleMicTap}
+              disabled={isStopping}
+              className="mb-8"
+            />
+
+            <p className="mb-2 text-lg font-semibold">タップして録音終了</p>
             <p className="mb-2 font-mono text-sm tabular-nums text-muted-foreground">
               {formattedDuration}
             </p>
@@ -128,40 +125,50 @@ export function CaptureHome() {
                     : "この端末ではリアルタイム表示できません。録音後に文字起こしします。")}
               </p>
             </div>
-          </>
+
+            {error && (
+              <p className="mt-4 text-center text-sm text-destructive">{error}</p>
+            )}
+
+            <button
+              type="button"
+              onClick={cancelRecording}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                "mt-4 gap-1 text-muted-foreground"
+              )}
+            >
+              <X className="size-4" />
+              キャンセル
+            </button>
+          </div>
         ) : (
-          <>
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6">
+            <CaptureMicButton
+              variant="idle"
+              onClick={handleMicTap}
+              disabled={isStopping}
+              className="mb-8"
+            />
+
+            <p className="mb-2 text-lg font-semibold">タップして録音開始</p>
             <p className="mb-1 text-center text-muted-foreground">
               思いついたことを話してください
             </p>
             <p className="text-center text-sm text-muted-foreground">
               AIが仕事として整理します
             </p>
-          </>
-        )}
 
-        {error && (
-          <p className="mt-4 text-center text-sm text-destructive">{error}</p>
-        )}
-
-        {shortRecordingHint && (
-          <p className="mt-4 text-center text-sm text-destructive">
-            録音時間が短すぎます（{MIN_RECORDING_SECONDS}秒以上話してください）
-          </p>
-        )}
-
-        {isRecording && (
-          <button
-            type="button"
-            onClick={cancelRecording}
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "sm" }),
-              "mt-4 gap-1 text-muted-foreground"
+            {error && (
+              <p className="mt-4 text-center text-sm text-destructive">{error}</p>
             )}
-          >
-            <X className="size-4" />
-            キャンセル
-          </button>
+
+            {shortRecordingHint && (
+              <p className="mt-4 text-center text-sm text-destructive">
+                録音時間が短すぎます（{MIN_RECORDING_SECONDS}秒以上話してください）
+              </p>
+            )}
+          </div>
         )}
       </main>
 
@@ -172,11 +179,12 @@ export function CaptureHome() {
               provider={provider}
               providers={providers}
               onChange={setProvider}
+              size="lg"
             />
           )}
           <Button
             variant="outline"
-            className="w-full gap-2"
+            className="min-h-12 w-full gap-2 text-base"
             onClick={() => setTextOpen(true)}
           >
             <Keyboard className="size-4" />

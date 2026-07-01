@@ -1,10 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import { ChevronRight, Mic, Monitor } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { AiProviderSelector } from "@/components/shared/ai-provider-selector";
 import { useAiProvider } from "@/lib/hooks/use-ai-provider";
 import { cn } from "@/lib/utils";
+
+const NAV_ITEMS = [
+  {
+    label: "録音画面",
+    href: "/capture",
+    icon: Mic,
+    description: "思考を話す・テキスト入力",
+  },
+  {
+    label: "未整理 inbox（PC）",
+    href: "/inbox",
+    icon: Monitor,
+    description: "担当・優先度を確定",
+  },
+] as const;
 
 export default function MenuPage() {
   const { provider, setProvider, providers, selectedInfo } = useAiProvider();
@@ -20,19 +36,31 @@ export default function MenuPage() {
           ×
         </Link>
       </div>
-      <nav className="space-y-1">
-        {[
-          { label: "録音画面", href: "/capture" },
-          { label: "未整理 inbox（PC）", href: "/inbox" },
-        ].map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="block rounded-lg px-3 py-3 hover:bg-muted"
-          >
-            {item.label}
-          </Link>
-        ))}
+      <nav className="space-y-2">
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-capture-surface active:bg-muted"
+            >
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Icon className="size-5" aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium">{item.label}</span>
+                <span className="block text-xs text-muted-foreground">
+                  {item.description}
+                </span>
+              </span>
+              <ChevronRight
+                className="size-4 shrink-0 text-muted-foreground"
+                aria-hidden
+              />
+            </Link>
+          );
+        })}
       </nav>
 
       {providers.length > 0 && (

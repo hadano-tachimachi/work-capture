@@ -7,8 +7,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { SpeechTextarea } from "@/components/shared/speech-input";
+import {
+  EditSheetBody,
+  EditSheetFooter,
+  editSheetContentClassName,
+} from "@/components/mobile/edit-sheet-layout";
 
 type EditMemoSheetProps = {
   open: boolean;
@@ -30,15 +34,16 @@ function EditMemoSheetBody({
 
   return (
     <>
-      <Textarea
-        className="mt-4 min-h-40"
-        value={local}
-        onChange={(e) => setLocal(e.target.value)}
-        placeholder="メモを入力"
-      />
-      <Button
-        className="mt-4 w-full"
-        onClick={() => {
+      <EditSheetBody className="pb-4 pt-2">
+        <SpeechTextarea
+          className="min-h-40"
+          value={local}
+          onChange={setLocal}
+          placeholder="メモを入力"
+        />
+      </EditSheetBody>
+      <EditSheetFooter
+        onSave={() => {
           onSave(
             local
               .split("\n")
@@ -47,9 +52,7 @@ function EditMemoSheetBody({
           );
           onClose();
         }}
-      >
-        保存して閉じる
-      </Button>
+      />
     </>
   );
 }
@@ -62,8 +65,8 @@ export function EditMemoSheet({
 }: EditMemoSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl">
-        <SheetHeader>
+      <SheetContent side="bottom" className={editSheetContentClassName()}>
+        <SheetHeader className="shrink-0 border-b pb-4">
           <SheetTitle>メモを編集</SheetTitle>
         </SheetHeader>
         {open && (

@@ -7,11 +7,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-
-const PRESETS = ["今日", "明日", "今週中", "来週", "未定"];
+import { DeadlinePicker } from "@/components/shared/deadline-picker";
+import {
+  EditSheetBody,
+  EditSheetFooter,
+  editSheetContentClassName,
+} from "@/components/mobile/edit-sheet-layout";
 
 type EditDeadlineSheetProps = {
   open: boolean;
@@ -33,38 +34,15 @@ function EditDeadlineSheetBody({
 
   return (
     <>
-      <div className="mt-4 space-y-2">
-        {PRESETS.map((preset) => (
-          <button
-            key={preset}
-            type="button"
-            onClick={() => setLocal(preset)}
-            className={cn(
-              "w-full rounded-lg border px-4 py-3 text-left text-sm transition-colors",
-              local === preset
-                ? "border-primary bg-primary/5 text-primary"
-                : "hover:bg-muted"
-            )}
-          >
-            {preset}
-          </button>
-        ))}
-        <Input
-          value={local}
-          onChange={(e) => setLocal(e.target.value)}
-          placeholder="カスタム期限を入力"
-          className="mt-2"
-        />
-      </div>
-      <Button
-        className="mt-6 w-full"
-        onClick={() => {
+      <EditSheetBody className="pb-4 pt-2">
+        <DeadlinePicker value={local} onChange={setLocal} />
+      </EditSheetBody>
+      <EditSheetFooter
+        onSave={() => {
           onSave(local.trim());
           onClose();
         }}
-      >
-        保存して閉じる
-      </Button>
+      />
     </>
   );
 }
@@ -77,8 +55,11 @@ export function EditDeadlineSheet({
 }: EditDeadlineSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl">
-        <SheetHeader>
+      <SheetContent
+        side="bottom"
+        className={editSheetContentClassName("max-h-[90dvh]")}
+      >
+        <SheetHeader className="shrink-0 border-b pb-4">
           <SheetTitle>期限を編集</SheetTitle>
         </SheetHeader>
         {open && (

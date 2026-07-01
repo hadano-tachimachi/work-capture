@@ -5,7 +5,7 @@ export const CLAUDE_TOOL_SCHEMA = {
     purpose: { type: "string", description: "目的。不明なら空文字" },
     background: { type: "string", description: "背景。不明なら空文字" },
     tasks: { type: "array", items: { type: "string" } },
-    due_date: { type: "string", description: "期限。不明なら空文字" },
+    due_date: { type: "string", description: "期限 YYYY-MM-DD。不明なら空文字" },
     action_plan: { type: "array", items: { type: "string" } },
     notes: { type: "array", items: { type: "string" } },
     decisions: { type: "array", items: { type: "string" } },

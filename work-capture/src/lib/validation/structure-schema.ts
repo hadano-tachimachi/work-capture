@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeDueDateValue } from "@/lib/utils/date-helpers";
 
 export const structuredOutputSchema = z.object({
   purpose: z.string().nullable(),
@@ -57,7 +58,7 @@ export function structuredOutputToItems(
   push("purpose", data.purpose);
   push("background", data.background);
   pushMany("task", data.tasks);
-  push("due_date", data.due_date);
+  push("due_date", normalizeDueDateValue(data.due_date));
   pushMany("action", data.action_plan);
   pushMany("note", data.notes);
   pushMany("decision", data.decisions);

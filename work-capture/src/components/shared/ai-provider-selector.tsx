@@ -16,6 +16,7 @@ type AiProviderSelectorProps = {
   providers: ProviderInfo[];
   onChange: (provider: AiProvider) => void;
   showHint?: boolean;
+  size?: "default" | "lg";
   className?: string;
 };
 
@@ -51,6 +52,7 @@ export function AiProviderSelector({
   providers,
   onChange,
   showHint = false,
+  size = "default",
   className,
 }: AiProviderSelectorProps) {
   const selected = providers.find((p) => p.id === provider);
@@ -67,7 +69,12 @@ export function AiProviderSelector({
             }
           }}
         >
-          <SelectTrigger className="h-9 w-full min-w-0 flex-1">
+          <SelectTrigger
+            className={cn(
+              "w-full min-w-0 flex-1",
+              size === "lg" ? "min-h-12 h-12 !h-12 px-3 text-base" : "h-9"
+            )}
+          >
             <SelectValue>
               {selected ? (
                 <ProviderOption item={selected} />

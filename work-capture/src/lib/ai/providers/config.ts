@@ -1,7 +1,7 @@
 import type { AiProvider, ProviderInfo } from "@/lib/ai/types";
 
 export const PROVIDER_MODELS: Record<AiProvider, string> = {
-  gemini: "gemini-2.0-flash",
+  gemini: "gemini-3.1-flash-lite",
   openai: "gpt-4o-mini",
   claude: "claude-3-5-haiku-latest",
 };

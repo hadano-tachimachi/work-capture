@@ -9,7 +9,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SpeechInput } from "@/components/shared/speech-input";
+import {
+  EditSheetBody,
+  EditSheetFooter,
+  editSheetContentClassName,
+} from "@/components/mobile/edit-sheet-layout";
 
 type EditTasksSheetProps = {
   open: boolean;
@@ -31,28 +36,35 @@ function EditTasksSheetBody({
     tasks.length > 0 ? tasks : [""]
   );
 
+  function handleSave() {
+    onSave(localTasks.map((t) => t.trim()).filter(Boolean));
+    onClose();
+  }
+
   return (
     <>
-      <div className="mt-4 space-y-3 overflow-y-auto pb-24">
+      <EditSheetBody className="space-y-3 pb-4 pt-2">
         {localTasks.map((task, i) => (
           <div key={i} className="flex items-center gap-2">
-            <span className="w-4 shrink-0 text-center text-sm text-muted-foreground">
+            <span className="w-5 shrink-0 text-center text-sm text-muted-foreground">
               {i + 1}
             </span>
-            <Input
+            <SpeechInput
               value={task}
-              onChange={(e) =>
+              onChange={(value) =>
                 setLocalTasks((prev) => {
                   const next = [...prev];
-                  next[i] = e.target.value;
+                  next[i] = value;
                   return next;
                 })
               }
               placeholder="タスクを入力"
+              className="min-h-11 flex-1"
             />
             <Button
               variant="ghost"
               size="icon"
+              className="size-10 shrink-0"
               onClick={() =>
                 setLocalTasks((prev) => prev.filter((_, idx) => idx !== i))
               }
@@ -64,24 +76,15 @@ function EditTasksSheetBody({
         ))}
         <Button
           variant="ghost"
-          size="sm"
+          size="lg"
+          className="min-h-11 w-full justify-start"
           onClick={() => setLocalTasks((prev) => [...prev, ""])}
         >
-          <Plus className="mr-1 size-4" />
+          <Plus className="mr-2 size-4" />
           タスクを追加
         </Button>
-      </div>
-      <div className="absolute inset-x-0 bottom-0 border-t bg-background p-4">
-        <Button
-          className="w-full"
-          onClick={() => {
-            onSave(localTasks.map((t) => t.trim()).filter(Boolean));
-            onClose();
-          }}
-        >
-          保存して閉じる
-        </Button>
-      </div>
+      </EditSheetBody>
+      <EditSheetFooter onSave={handleSave} />
     </>
   );
 }
@@ -94,8 +97,8 @@ export function EditTasksSheet({
 }: EditTasksSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[85dvh] rounded-t-2xl">
-        <SheetHeader>
+      <SheetContent side="bottom" className={editSheetContentClassName()}>
+        <SheetHeader className="shrink-0 border-b pb-4">
           <SheetTitle>タスクを編集</SheetTitle>
         </SheetHeader>
         {open && (
