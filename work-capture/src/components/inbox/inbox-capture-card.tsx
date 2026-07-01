@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { phaseAccentClasses } from "@/lib/utils/phase-colors";
 import { formatRelativeTime } from "@/lib/utils/capture-helpers";
 
 export type InboxCapture = {
@@ -33,7 +34,10 @@ export function InboxCaptureCard({
       className={cn(
         "w-full rounded-xl border bg-card p-3 text-left text-sm shadow-sm transition-colors hover:bg-capture-surface",
         selected &&
-          "border-l-4 border-l-primary border-primary/30 bg-capture-surface",
+          cn(
+            "border-l-4 bg-capture-surface",
+            phaseAccentClasses.organize.border
+          ),
         className
       )}
     >
@@ -57,7 +61,7 @@ export function InboxCaptureCard({
             "px-1.5 py-0 text-[10px]",
             capture.status === "validation_failed"
               ? "bg-destructive/10 text-destructive hover:bg-destructive/10"
-              : "bg-primary/10 text-primary hover:bg-primary/10"
+              : phaseAccentClasses.organize.badgeSoft
           )}
         >
           {capture.status === "validation_failed" ? "要確認" : "確認待ち"}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  deleteTask,
   getTaskById,
   parseTaskStatus,
   updateTaskStatus,
@@ -42,6 +43,18 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ task });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to update";
+    const status = message === "Task not found" ? 404 : 500;
+    return NextResponse.json({ error: message }, { status });
+  }
+}
+
+export async function DELETE(_request: Request, context: RouteContext) {
+  try {
+    const { id } = await context.params;
+    const task = await deleteTask(id);
+    return NextResponse.json({ task });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to delete";
     const status = message === "Task not found" ? 404 : 500;
     return NextResponse.json({ error: message }, { status });
   }

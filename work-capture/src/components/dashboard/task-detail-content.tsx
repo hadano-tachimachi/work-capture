@@ -10,6 +10,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { phaseAccentClasses } from "@/lib/utils/phase-colors";
 import { formatDueDateDisplay } from "@/lib/utils/date-helpers";
 import { priorityLabel } from "@/lib/utils/task-display";
 
@@ -28,6 +29,8 @@ type TaskDetailContentProps = {
   compact?: boolean;
   onComplete: () => void;
   onHold: () => void;
+  onDelete: () => void;
+  onRestore?: () => void;
   className?: string;
 };
 
@@ -46,9 +49,12 @@ export function TaskDetailContent({
   compact,
   onComplete,
   onHold,
+  onDelete,
+  onRestore,
   className,
 }: TaskDetailContentProps) {
   const [notesOpen, setNotesOpen] = useState(false);
+  const isDone = status === "done";
 
   return (
     <div
@@ -71,6 +77,16 @@ export function TaskDetailContent({
           {status === "on_hold" && (
             <Badge className="bg-muted text-muted-foreground hover:bg-muted">
               保留中
+            </Badge>
+          )}
+          {isDone && (
+            <Badge
+              className={cn(
+                "hover:bg-tertiary-muted",
+                phaseAccentClasses.execute.badgeSoft
+              )}
+            >
+              完了済み
             </Badge>
           )}
         </div>
@@ -129,35 +145,71 @@ export function TaskDetailContent({
           compact && "pb-[max(1rem,env(safe-area-inset-bottom))]"
         )}
       >
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button
-            size="lg"
-            className="min-w-0 flex-1"
-            onClick={onComplete}
-            disabled={saving}
-          >
-            完了
-          </Button>
-          {status !== "on_hold" ? (
-            <Button
-              variant="outline"
-              size="lg"
-              className="min-w-0 flex-1"
-              onClick={onHold}
-              disabled={saving}
-            >
-              保留
-            </Button>
+        <div className="flex flex-col gap-3">
+          {isDone ? (
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button
+                variant="outline"
+                size="lg"
+                className="min-w-0 flex-1"
+                onClick={onRestore}
+                disabled={saving || !onRestore}
+              >
+                未完了に戻す
+              </Button>
+              <Button
+                variant="destructive"
+                size="lg"
+                className="min-w-0 flex-1"
+                onClick={onDelete}
+                disabled={saving}
+              >
+                削除
+              </Button>
+            </div>
           ) : (
-            <Button
-              variant="outline"
-              size="lg"
-              className="min-w-0 flex-1"
-              onClick={onHold}
-              disabled={saving}
-            >
-              やることに戻す
-            </Button>
+            <>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  size="lg"
+                  className="min-w-0 flex-1"
+                  onClick={onComplete}
+                  disabled={saving}
+                >
+                  完了
+                </Button>
+                {status !== "on_hold" ? (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="min-w-0 flex-1"
+                    onClick={onHold}
+                    disabled={saving}
+                  >
+                    保留
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="min-w-0 flex-1"
+                    onClick={onHold}
+                    disabled={saving}
+                  >
+                    やることに戻す
+                  </Button>
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                size="lg"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={onDelete}
+                disabled={saving}
+              >
+                削除
+              </Button>
+            </>
           )}
         </div>
       </div>

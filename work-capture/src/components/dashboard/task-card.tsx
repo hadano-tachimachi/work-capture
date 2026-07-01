@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { phaseAccentClasses } from "@/lib/utils/phase-colors";
 import {
   formatTaskDueDateShort,
   priorityLabel,
@@ -36,8 +37,12 @@ export function TaskCard({
       className={cn(
         "w-full rounded-xl border bg-card p-3 text-left text-sm shadow-sm transition-colors hover:bg-capture-surface",
         selected &&
-          "border-l-4 border-l-primary border-primary/30 bg-capture-surface",
+          cn(
+            "border-l-4 bg-capture-surface",
+            phaseAccentClasses.execute.border
+          ),
         task.status === "on_hold" && "opacity-80",
+        task.status === "done" && "opacity-75",
         className
       )}
     >
@@ -57,6 +62,16 @@ export function TaskCard({
         {task.status === "on_hold" && (
           <Badge className="bg-muted px-1.5 py-0 text-[10px] text-muted-foreground hover:bg-muted">
             保留
+          </Badge>
+        )}
+        {task.status === "done" && (
+          <Badge
+            className={cn(
+              "px-1.5 py-0 text-[10px]",
+              phaseAccentClasses.execute.badgeSoft
+            )}
+          >
+            完了
           </Badge>
         )}
       </div>

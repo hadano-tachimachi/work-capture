@@ -5,6 +5,7 @@ import { Mic } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { phaseAccentClasses } from "@/lib/utils/phase-colors";
 
 type PcWorkHeaderProps = {
   mode: "inbox" | "dashboard";
@@ -25,19 +26,24 @@ export function PcWorkHeader({
         <h1 className="shrink-0 text-xl font-semibold text-primary">
           Work Capture
         </h1>
-        <nav className="flex items-center gap-1 rounded-lg border bg-muted/30 p-1">
+        <nav className="flex items-center gap-1 rounded-lg border bg-muted/40 p-1">
           <Link
             href="/inbox"
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
               mode === "inbox"
-                ? "bg-background text-foreground shadow-sm"
+                ? phaseAccentClasses.organize.navActive
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
             Inbox Zero
             {inboxCount > 0 && (
-              <Badge className="ml-1.5 min-w-5 justify-center bg-primary px-1 text-[10px] text-primary-foreground hover:bg-primary">
+              <Badge
+                className={cn(
+                  "ml-1.5 min-w-5 justify-center px-1 text-[10px]",
+                  phaseAccentClasses.organize.badge
+                )}
+              >
                 {inboxCount}
               </Badge>
             )}
@@ -47,13 +53,18 @@ export function PcWorkHeader({
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
               mode === "dashboard"
-                ? "bg-background text-foreground shadow-sm"
+                ? phaseAccentClasses.execute.navActive
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
             Dashboard
             {taskCount > 0 && (
-              <Badge className="ml-1.5 min-w-5 justify-center bg-primary px-1 text-[10px] text-primary-foreground hover:bg-primary">
+              <Badge
+                className={cn(
+                  "ml-1.5 min-w-5 justify-center px-1 text-[10px]",
+                  phaseAccentClasses.execute.badge
+                )}
+              >
                 {taskCount}
               </Badge>
             )}

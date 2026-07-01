@@ -45,6 +45,13 @@ export async function listTasks(
     .from(tasks)
     .where(inArray(tasks.status, statuses));
 
+  if (statuses.length === 1 && statuses[0] === "done") {
+    return [...rows].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
   return sortTasks(rows);
 }
 
@@ -52,19 +59,20 @@ export async function getTaskCounts(): Promise<{
   todo: number;
   onHold: number;
   active: number;
+  done: number;
 }> {
   const db = getDb();
   const { tasks } = getTables();
 
   const rows: { status: string }[] = await db
     .select({ status: tasks.status })
-    .from(tasks)
-    .where(inArray(tasks.status, ["todo", "on_hold"]));
+    .from(tasks);
 
   const todo = rows.filter((r) => r.status === "todo").length;
   const onHold = rows.filter((r) => r.status === "on_hold").length;
+  const done = rows.filter((r) => r.status === "done").length;
 
-  return { todo, onHold, active: todo + onHold };
+  return { todo, onHold, active: todo + onHold, done };
 }
 
 export async function getTaskById(id: string): Promise<TaskDetail | null> {
@@ -109,6 +117,22 @@ export async function updateTaskStatus(id: string, status: TaskStatus) {
   }
 
   return updated;
+}
+
+export async function deleteTask(id: string) {
+  const db = getDb();
+  const { tasks } = getTables();
+
+  const [deleted] = await db
+    .delete(tasks)
+    .where(eq(tasks.id, id))
+    .returning();
+
+  if (!deleted) {
+    throw new Error("Task not found");
+  }
+
+  return deleted;
 }
 
 export function parseTaskStatus(value: unknown): TaskStatus | null {

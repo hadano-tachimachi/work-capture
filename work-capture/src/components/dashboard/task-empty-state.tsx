@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CheckCircle2, ListTodo } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { phaseAccentClasses } from "@/lib/utils/phase-colors";
 
 type TaskEmptyStateProps = {
   allDone?: boolean;
@@ -18,7 +19,14 @@ export function TaskEmptyState({ allDone, className }: TaskEmptyStateProps) {
         className
       )}
     >
-      <div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+      <div
+        className={cn(
+          "flex size-16 items-center justify-center rounded-full",
+          allDone
+            ? phaseAccentClasses.execute.icon
+            : phaseAccentClasses.capture.icon
+        )}
+      >
         {allDone ? (
           <CheckCircle2 className="size-8" />
         ) : (

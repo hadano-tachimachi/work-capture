@@ -1,6 +1,8 @@
 "use client";
 
 import { Progress } from "@/components/ui/progress";
+import { phaseAccentClasses } from "@/lib/utils/phase-colors";
+import { cn } from "@/lib/utils";
 
 type InboxProgressProps = {
   currentIndex: number;
@@ -30,10 +32,13 @@ export function InboxProgress({
             </span>
             <span>残り {remaining} 件</span>
           </div>
-          <Progress value={percent} className="h-1.5" />
+          <Progress
+            value={percent}
+            className={cn("h-1.5", "[&_[data-slot=progress-indicator]]:bg-secondary-foreground")}
+          />
         </>
       ) : processedCount > 0 ? (
-        <p className="text-sm text-primary">
+        <p className={cn("text-sm", phaseAccentClasses.organize.text)}>
           本日 {processedCount} 件を整理しました
         </p>
       ) : null}

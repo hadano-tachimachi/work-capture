@@ -2,9 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { TaskCard, type TaskSummary } from "@/components/dashboard/task-card";
+import type { TaskSummary } from "@/components/dashboard/task-card";
+import { TaskCompletedEmptyState } from "@/components/dashboard/task-completed-empty-state";
 import { TaskDetailContent } from "@/components/dashboard/task-detail-content";
 import { TaskEmptyState } from "@/components/dashboard/task-empty-state";
+import { TaskListPanel } from "@/components/dashboard/task-list-panel";
+import { TaskViewTabs } from "@/components/dashboard/task-view-tabs";
 import { PcWorkHeader } from "@/components/shared/pc-work-header";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -19,19 +22,31 @@ type TaskRow = TaskSummary & {
 export default function DashboardPage() {
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [view, setView] = useState<"active" | "completed">("active");
   const [inboxCount, setInboxCount] = useState(0);
+  const [doneCount, setDoneCount] = useState(0);
+  const [activeCountTotal, setActiveCountTotal] = useState(0);
   const [detail, setDetail] = useState<{
     nextAction: string | null;
     notes: string[];
   }>({ nextAction: null, notes: [] });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [hadTasks, setHadTasks] = useState(false);
+  const [hadActiveTasks, setHadActiveTasks] = useState(false);
   const hasInitializedSelection = useRef(false);
 
+  const loadCounts = useCallback(async () => {
+    const res = await fetch("/api/tasks/count");
+    const data = await res.json();
+    setDoneCount(data.done ?? 0);
+    setActiveCountTotal(data.active ?? 0);
+  }, []);
+
   const loadTasks = useCallback(async () => {
+    const url =
+      view === "completed" ? "/api/tasks?status=done" : "/api/tasks";
     const [tasksRes, inboxRes] = await Promise.all([
-      fetch("/api/tasks"),
+      fetch(url),
       fetch("/api/inbox/count"),
     ]);
     const tasksData = await tasksRes.json();
@@ -39,21 +54,29 @@ export default function DashboardPage() {
     const list: TaskRow[] = tasksData.tasks ?? [];
     setTasks(list);
     setInboxCount(inboxData.count ?? 0);
-    if (list.length > 0) setHadTasks(true);
+    if (view === "active" && list.length > 0) setHadActiveTasks(true);
+    void loadCounts();
     return list;
-  }, []);
+  }, [view, loadCounts]);
 
   useEffect(() => {
     let cancelled = false;
+    hasInitializedSelection.current = false;
 
     async function init() {
+      setLoading(true);
       const list = await loadTasks();
       if (cancelled) return;
 
-      if (!hasInitializedSelection.current && list.length > 0) {
+      if (list.length > 0) {
         hasInitializedSelection.current = true;
-        const firstTodo = list.find((t) => t.status === "todo");
-        setSelectedId((firstTodo ?? list[0]).id);
+        const first =
+          view === "completed"
+            ? list[0]
+            : (list.find((t) => t.status === "todo") ?? list[0]);
+        setSelectedId(first.id);
+      } else {
+        setSelectedId(null);
       }
 
       setLoading(false);
@@ -63,7 +86,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [loadTasks]);
+  }, [loadTasks, view]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -89,6 +112,22 @@ export default function DashboardPage() {
     };
   }, [selectedId]);
 
+  function selectNextAfterRemoval(
+    list: TaskRow[],
+    removedId: string
+  ): string | null {
+    const index = list.findIndex((t) => t.id === removedId);
+    const remaining = list.filter((t) => t.id !== removedId);
+    if (remaining.length === 0) return null;
+
+    if (view === "completed") {
+      return remaining[Math.min(index, remaining.length - 1)]?.id ?? null;
+    }
+
+    const nextTodo = remaining.find((t) => t.status === "todo");
+    return nextTodo?.id ?? remaining[0]?.id ?? null;
+  }
+
   async function updateStatus(status: TaskStatus) {
     if (!selectedId) return;
     const currentId = selectedId;
@@ -102,19 +141,29 @@ export default function DashboardPage() {
 
       const list = await loadTasks();
 
-      if (status === "done") {
-        const next =
-          list.find((t) => t.status === "todo") ?? list[0] ?? null;
-        setSelectedId(next?.id ?? null);
+      if ((status === "done" && view === "active") || (status === "todo" && view === "completed")) {
+        setSelectedId(selectNextAfterRemoval(list, currentId));
       } else {
         const still = list.find((t) => t.id === currentId);
-        setSelectedId(
-          still?.id ??
-            list.find((t) => t.status === "todo")?.id ??
-            list[0]?.id ??
-            null
-        );
+        setSelectedId(still?.id ?? selectNextAfterRemoval(list, currentId));
       }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function removeTask() {
+    if (!selectedId) return;
+    if (!window.confirm("このタスクを削除しますか？")) return;
+
+    const currentId = selectedId;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/tasks/${currentId}`, { method: "DELETE" });
+      if (!res.ok) return;
+
+      const list = await loadTasks();
+      setSelectedId(selectNextAfterRemoval(list, currentId));
     } finally {
       setSaving(false);
     }
@@ -147,90 +196,92 @@ export default function DashboardPage() {
       </div>
 
       <div className="hidden min-h-dvh flex-col md:flex">
-      <PcWorkHeader
-        mode="dashboard"
-        inboxCount={inboxCount}
-        taskCount={todoTasks.length}
-        trailing={
-          tasks.length > 0 ? (
-            <span className="text-sm text-muted-foreground">
-              未完了 {tasks.length} 件
-              {holdTasks.length > 0 && `（保留 ${holdTasks.length}）`}
-            </span>
-          ) : undefined
-        }
-      />
+        <PcWorkHeader
+          mode="dashboard"
+          inboxCount={inboxCount}
+          taskCount={todoTasks.length}
+          trailing={
+            view === "active" && tasks.length > 0 ? (
+              <span className="text-sm text-muted-foreground">
+                未完了 {tasks.length} 件
+                {holdTasks.length > 0 && `（保留 ${holdTasks.length}）`}
+              </span>
+            ) : view === "completed" && tasks.length > 0 ? (
+              <span className="text-sm text-muted-foreground">
+                完了済み {tasks.length} 件
+              </span>
+            ) : undefined
+          }
+        />
 
-      {tasks.length === 0 ? (
-        <TaskEmptyState allDone={hadTasks} />
-      ) : (
-        <div className="flex flex-1 overflow-hidden">
-          <aside className="flex w-72 shrink-0 flex-col overflow-y-auto border-r bg-muted/20 p-3">
-            <p className="mb-2 px-1 text-xs font-medium text-muted-foreground">
-              今日やること
-            </p>
-            {todoTasks.length === 0 && holdTasks.length > 0 && (
-              <p className="mb-2 px-1 text-xs text-muted-foreground">
-                進行中のタスクはありません
-              </p>
-            )}
-            {todoTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                selected={selectedId === task.id}
-                onClick={() => setSelectedId(task.id)}
-                className="mb-2"
-              />
-            ))}
-            {holdTasks.length > 0 && (
-              <>
-                <p className="mb-2 mt-4 px-1 text-xs font-medium text-muted-foreground">
-                  保留
-                </p>
-                {holdTasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    selected={selectedId === task.id}
-                    onClick={() => setSelectedId(task.id)}
-                    className="mb-2"
-                  />
-                ))}
-              </>
-            )}
-          </aside>
-
-          {selected ? (
-            <TaskDetailContent
-              title={selected.title}
-              description={selected.description}
-              priority={selected.priority}
-              dueDate={selected.dueDate}
-              project={selected.project}
-              context={selected.context}
-              assignedTo={selected.assignedTo}
-              nextAction={detail.nextAction}
-              notes={detail.notes}
-              status={selected.status}
-              saving={saving}
-              onComplete={() => updateStatus("done")}
-              onHold={() =>
-                updateStatus(selected.status === "on_hold" ? "todo" : "on_hold")
-              }
-              className="min-w-0 flex-1"
-            />
-          ) : (
-            <div className="flex flex-1 items-center justify-center text-muted-foreground">
-              左からタスクを選択してください
-            </div>
-          )}
+        <div className="border-b px-4 py-3 md:px-6">
+          <TaskViewTabs
+            view={view}
+            onViewChange={setView}
+            activeCount={activeCountTotal}
+            doneCount={doneCount}
+          />
         </div>
-      )}
 
-      <div className="hidden border-t px-6 py-2 text-center text-xs text-muted-foreground md:block">
-        Capture → Inbox Zero → Dashboard の順で仕事が前に進みます
-      </div>
+        {view === "active" && tasks.length === 0 ? (
+          <TaskEmptyState allDone={hadActiveTasks} />
+        ) : view === "completed" && tasks.length === 0 ? (
+          <TaskCompletedEmptyState />
+        ) : (
+          <div className="flex flex-1 overflow-hidden">
+            <aside className="flex w-72 shrink-0 flex-col overflow-y-auto border-r bg-muted/20 p-3">
+              <p className="mb-2 px-1 text-xs font-medium text-muted-foreground">
+                {view === "completed" ? "完了済み" : "今日やること"}
+              </p>
+              <TaskListPanel
+                view={view}
+                todoTasks={todoTasks}
+                holdTasks={holdTasks}
+                completedTasks={tasks}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                cardClassName="mb-2"
+              />
+            </aside>
+
+            {selected ? (
+              <TaskDetailContent
+                title={selected.title}
+                description={selected.description}
+                priority={selected.priority}
+                dueDate={selected.dueDate}
+                project={selected.project}
+                context={selected.context}
+                assignedTo={selected.assignedTo}
+                nextAction={detail.nextAction}
+                notes={detail.notes}
+                status={selected.status}
+                saving={saving}
+                onComplete={() => updateStatus("done")}
+                onHold={() =>
+                  updateStatus(
+                    selected.status === "on_hold" ? "todo" : "on_hold"
+                  )
+                }
+                onDelete={removeTask}
+                onRestore={
+                  selected.status === "done"
+                    ? () => updateStatus("todo")
+                    : undefined
+                }
+                className="min-w-0 flex-1"
+              />
+            ) : (
+              <div className="flex flex-1 items-center justify-center text-muted-foreground">
+                左からタスクを選択してください
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="hidden border-t px-6 py-2 text-center text-xs text-muted-foreground md:block">
+          Capture → Inbox Zero → Dashboard の順で仕事が前に進みます
+        </div>
       </div>
     </>
   );

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Inbox, Mic } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { phaseAccentClasses } from "@/lib/utils/phase-colors";
 
 type InboxEmptyStateProps = {
   processedCount?: number;
@@ -21,14 +22,19 @@ export function InboxEmptyState({
         className
       )}
     >
-      <div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+      <div
+        className={cn(
+          "flex size-16 items-center justify-center rounded-full",
+          phaseAccentClasses.organize.icon
+        )}
+      >
         <Inbox className="size-8" />
       </div>
       <p className="text-muted-foreground">
         未整理の Work Capture はありません
       </p>
       {processedCount > 0 && (
-        <p className="text-sm text-primary">
+        <p className={cn("text-sm", phaseAccentClasses.organize.text)}>
           本日 {processedCount} 件を整理しました
         </p>
       )}
