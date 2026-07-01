@@ -141,7 +141,8 @@ export function TaskDetailContent({
 
       <div
         className={cn(
-          "shrink-0 border-t bg-background p-4",
+          "shrink-0 border-t bg-card p-4 shadow-[0_-4px_16px_rgba(0,0,0,0.04)]",
+          !compact && "md:px-6",
           compact && "pb-[max(1rem,env(safe-area-inset-bottom))]"
         )}
       >

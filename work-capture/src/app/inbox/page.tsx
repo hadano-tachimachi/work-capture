@@ -393,7 +393,7 @@ export default function InboxPage() {
       </div>
 
       {/* ── Desktop ── */}
-      <div className="hidden min-h-dvh flex-col md:flex">
+      <div className="hidden h-dvh flex-col overflow-hidden md:flex">
         <PcWorkHeader
           mode="inbox"
           inboxCount={captures.length}
@@ -412,8 +412,8 @@ export default function InboxPage() {
         {captures.length === 0 ? (
           <InboxEmptyState processedCount={processedCount} />
         ) : (
-          <div className="flex flex-1 overflow-hidden">
-            <aside className="w-72 shrink-0 overflow-y-auto border-r bg-muted/20 p-3">
+          <div className="flex min-h-0 flex-1 overflow-hidden">
+            <aside className="w-72 min-h-0 shrink-0 overflow-y-auto border-r bg-muted/20 p-3">
               {captures.map((c) => (
                 <InboxCaptureCard
                   key={c.id}

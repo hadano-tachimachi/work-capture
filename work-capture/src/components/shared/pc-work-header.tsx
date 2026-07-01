@@ -21,7 +21,7 @@ export function PcWorkHeader({
   trailing,
 }: PcWorkHeaderProps) {
   return (
-    <header className="flex items-center justify-between border-b bg-card px-6 py-4">
+    <header className="flex shrink-0 items-center justify-between border-b bg-card px-6 py-4">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <h1 className="shrink-0 text-xl font-semibold text-primary">
           Work Capture
