@@ -136,7 +136,7 @@ export default function DashboardPage() {
     <>
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 md:hidden">
         <p className="text-center text-muted-foreground">
-          Dashboard は PC 向けです。スマホではメニューから「今日やること」をご利用ください。
+          ワイドレイアウト向けの画面です。「今日やること」から操作できます。
         </p>
         <Link
           href="/capture/tasks"

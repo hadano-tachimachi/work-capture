@@ -34,7 +34,7 @@ export function TaskEmptyState({ allDone, className }: TaskEmptyStateProps) {
         <p className="text-sm text-muted-foreground">
           {allDone
             ? "お疲れさまです。新しい Capture があれば Inbox Zero で整理できます。"
-            : "PC の Inbox Zero で未整理を処理すると、タスクがここに並びます。"}
+            : "Inbox Zero で未整理を処理すると、タスクがここに並びます。"}
         </p>
       </div>
       <Link

@@ -70,7 +70,7 @@ export function PcWorkHeader({
           )}
         >
           <Mic className="size-4" />
-          スマホで追加
+          音声で追加
         </Link>
       </div>
     </header>

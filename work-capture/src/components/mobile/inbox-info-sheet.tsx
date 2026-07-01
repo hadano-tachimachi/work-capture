@@ -1,6 +1,6 @@
 "use client";
 
-import { Monitor, Inbox } from "lucide-react";
+import { Inbox } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -34,25 +34,25 @@ export function InboxInfoSheet({
             未整理 {count} 件
           </SheetTitle>
           <SheetDescription className="text-left">
-            PC の Inbox Zero 画面で整理・確定できます
+            Inbox Zero で整理・確定できます
           </SheetDescription>
         </SheetHeader>
 
         <div className="space-y-4 px-4 pt-4 text-sm leading-relaxed">
           <div className="flex gap-3 rounded-xl border bg-capture-surface p-4">
-            <Monitor className="mt-0.5 size-5 shrink-0 text-primary" />
+            <Inbox className="mt-0.5 size-5 shrink-0 text-primary" />
             <div className="min-w-0">
-              <p className="font-medium">PC で開いて整理</p>
+              <p className="font-medium">Inbox Zero で整理</p>
               <p className="mt-1.5 text-muted-foreground">
-                スマホでは思考を預けるだけ。担当・優先度・プロジェクトの確定は
-                PC の Inbox Zero で行います。
+                録音画面では思考を預けるだけ。担当・優先度・プロジェクトの確定は
+                Inbox Zero で行います。
               </p>
             </div>
           </div>
 
           <ol className="list-decimal space-y-2.5 pl-5 text-muted-foreground">
-            <li className="pl-1">PC ブラウザで Work Capture を開く</li>
-            <li className="pl-1">「未整理 inbox」から1件ずつ確認</li>
+            <li className="pl-1">メニューから Inbox Zero を開く</li>
+            <li className="pl-1">「未整理 Inbox」から1件ずつ確認</li>
             <li className="pl-1">「保存して次へ」で仕事として確定</li>
           </ol>
 

@@ -118,7 +118,7 @@ export function TaskDetailContent({
 
         {compact && (
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            詳細の編集は PC の Dashboard で行えます
+            詳細の編集は Dashboard で行えます
           </p>
         )}
       </div>

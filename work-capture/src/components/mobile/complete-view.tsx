@@ -11,7 +11,7 @@ export function CompleteView() {
     <StatusScreen
       icon={<CheckCircle2 className="size-10" strokeWidth={1.75} />}
       title="登録しました"
-      subtitle="PCで確認・整理できます"
+      subtitle="Inbox Zero で確認・整理できます"
     >
       <div className="flex w-full max-w-sm flex-col gap-3">
         <Link
@@ -25,7 +25,7 @@ export function CompleteView() {
           href="/inbox"
           className={cn(buttonVariants({ variant: "outline" }), "justify-center")}
         >
-          PCで確認する
+          Inbox Zero で確認
         </Link>
       </div>
     </StatusScreen>

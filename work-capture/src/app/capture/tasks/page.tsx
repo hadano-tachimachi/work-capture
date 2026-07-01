@@ -242,7 +242,7 @@ export default function CaptureTasksPage() {
             )}
           </div>
           <p className="border-t px-4 py-3 text-center text-xs text-muted-foreground">
-            PC の Dashboard で詳細を確認・編集できます
+            Dashboard で詳細を確認・編集できます
           </p>
         </>
       )}

@@ -49,7 +49,7 @@ export default function MenuPage() {
       badge: taskCount,
     },
     {
-      label: "未整理 inbox（PC）",
+      label: "未整理 Inbox",
       href: "/inbox",
       icon: Monitor,
       description: "担当・優先度を確定",
@@ -124,7 +124,7 @@ export default function MenuPage() {
         <ol className="list-inside list-decimal space-y-2 text-sm text-muted-foreground">
           <li>録音画面で思いついたことを話す</li>
           <li>AI の分解結果を確認・編集して登録</li>
-          <li>PC の Inbox Zero で担当・優先度を確定</li>
+          <li>Inbox Zero で担当・優先度を確定</li>
           <li>Dashboard でタスクを完了する</li>
         </ol>
         <p className="mt-3 text-xs text-muted-foreground">
