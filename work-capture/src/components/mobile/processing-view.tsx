@@ -83,7 +83,7 @@ export function ProcessingView({ captureId }: ProcessingViewProps) {
         title="データが見つかりません"
         subtitle="録音画面からやり直してください"
       >
-        <Button onClick={() => router.push("/capture")}>録音画面へ</Button>
+        <Button size="lg" onClick={() => router.push("/capture")}>録音画面へ</Button>
       </StatusScreen>
     );
   }
@@ -119,7 +119,7 @@ export function ProcessingView({ captureId }: ProcessingViewProps) {
 
       <Progress value={progress} className="mb-8 w-full max-w-sm" />
 
-      <Button variant="ghost" onClick={() => router.push("/capture")}>
+      <Button variant="ghost" size="lg" onClick={() => router.push("/capture")}>
         録音画面に戻る
       </Button>
     </StatusScreen>

@@ -87,6 +87,7 @@ export function RecordingFinishedView({
       >
         <div className="flex w-full max-w-sm flex-col gap-3">
           <Button
+            size="lg"
             onClick={() => {
               setPhase("uploading");
               setErrorMessage("");
@@ -100,7 +101,7 @@ export function RecordingFinishedView({
           >
             再送信
           </Button>
-          <Button variant="outline" onClick={onError}>
+          <Button variant="outline" size="lg" onClick={onError}>
             録音画面に戻る
           </Button>
         </div>

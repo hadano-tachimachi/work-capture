@@ -28,8 +28,8 @@ export function ValidationFailedAlert({
       <Button
         type="button"
         variant="ghost"
-        size="icon"
-        className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
+        size="icon-sm"
+        className="shrink-0 text-muted-foreground hover:text-foreground"
         onClick={dismiss}
         aria-label="警告を閉じる"
       >

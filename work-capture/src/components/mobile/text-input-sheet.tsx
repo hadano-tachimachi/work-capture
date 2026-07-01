@@ -77,7 +77,12 @@ export function TextInputSheet({
             onChange={setText}
           />
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button onClick={handleSubmit} disabled={loading || !text.trim()}>
+          <Button
+            size="lg"
+            className="w-full"
+            onClick={handleSubmit}
+            disabled={loading || !text.trim()}
+          >
             {loading ? "AIで整理中…" : "AIで整理する"}
           </Button>
         </div>

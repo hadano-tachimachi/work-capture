@@ -184,7 +184,8 @@ export function CaptureHome() {
           )}
           <Button
             variant="outline"
-            className="min-h-12 w-full gap-2 text-base"
+            size="lg"
+            className="w-full gap-2"
             onClick={() => setTextOpen(true)}
           >
             <Keyboard className="size-4" />

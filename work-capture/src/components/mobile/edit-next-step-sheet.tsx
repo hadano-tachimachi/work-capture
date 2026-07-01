@@ -70,7 +70,6 @@ function EditNextStepSheetBody({
               setLocal(value);
             }}
             placeholder="次の一歩を入力"
-            className="min-h-11"
           />
         </div>
       </EditSheetBody>

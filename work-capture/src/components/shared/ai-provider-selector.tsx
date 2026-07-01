@@ -70,10 +70,8 @@ export function AiProviderSelector({
           }}
         >
           <SelectTrigger
-            className={cn(
-              "w-full min-w-0 flex-1",
-              size === "lg" ? "min-h-12 h-12 !h-12 px-3 text-base" : "h-9"
-            )}
+            size={size === "lg" ? "lg" : "default"}
+            className="w-full min-w-0 flex-1"
           >
             <SelectValue>
               {selected ? (

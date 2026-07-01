@@ -59,12 +59,12 @@ function EditTasksSheetBody({
                 })
               }
               placeholder="タスクを入力"
-              className="min-h-11 flex-1"
+              className="flex-1"
             />
             <Button
               variant="ghost"
               size="icon"
-              className="size-10 shrink-0"
+              className="shrink-0"
               onClick={() =>
                 setLocalTasks((prev) => prev.filter((_, idx) => idx !== i))
               }
@@ -76,8 +76,7 @@ function EditTasksSheetBody({
         ))}
         <Button
           variant="ghost"
-          size="lg"
-          className="min-h-11 w-full justify-start"
+          className="w-full justify-start"
           onClick={() => setLocalTasks((prev) => [...prev, ""])}
         >
           <Plus className="mr-2 size-4" />

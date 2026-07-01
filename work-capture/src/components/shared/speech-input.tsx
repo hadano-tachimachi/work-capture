@@ -29,15 +29,15 @@ export function SpeechInput({
         {...props}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={cn(supported && "pr-11", className)}
+        className={cn(supported && "pr-12", className)}
       />
       {supported && (
         <Button
           type="button"
           variant="ghost"
-          size="icon"
+          size="icon-sm"
           className={cn(
-            "absolute right-1 size-9 shrink-0",
+            "absolute right-1 shrink-0",
             listening && "text-primary"
           )}
           onClick={() => toggle(value, onChange)}

@@ -244,7 +244,7 @@ export function ReviewView({ captureId }: ReviewViewProps) {
         {error && (
           <p className="mb-2 text-sm text-destructive">{error}</p>
         )}
-        <Button className="w-full" onClick={handleRegister} disabled={saving}>
+        <Button size="lg" className="w-full" onClick={handleRegister} disabled={saving}>
           {saving ? "登録中…" : "この内容で登録"}
         </Button>
         <p className="mt-2 text-center text-xs text-muted-foreground">

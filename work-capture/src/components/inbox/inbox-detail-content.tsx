@@ -172,7 +172,6 @@ export function InboxDetailContent({
           <SpeechInput
             value={assignedTo}
             onChange={onAssignedToChange}
-            className="min-h-11"
           />
         </div>
         <div>
@@ -181,7 +180,7 @@ export function InboxDetailContent({
             value={priority}
             onValueChange={(v) => v && onPriorityChange(v)}
           >
-            <SelectTrigger className="min-h-11">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -197,7 +196,6 @@ export function InboxDetailContent({
             value={project}
             onChange={onProjectChange}
             placeholder="例：見積案件"
-            className="min-h-11"
           />
         </div>
         <div>
@@ -206,7 +204,6 @@ export function InboxDetailContent({
             value={context}
             onChange={onContextChange}
             placeholder="例：本業"
-            className="min-h-11"
           />
         </div>
       </div>
@@ -219,10 +216,7 @@ export function InboxDetailContent({
       >
         <Button
           size="lg"
-          className={cn(
-            "min-h-12 w-full text-base",
-            !compact && "min-w-0 flex-[2]"
-          )}
+          className={cn("w-full", !compact && "min-w-0 flex-[2]")}
           onClick={() => onAction("confirm")}
           disabled={saving}
         >
@@ -234,7 +228,7 @@ export function InboxDetailContent({
           <Button
             variant="outline"
             size="lg"
-            className="min-h-11 min-w-0 flex-1"
+            className="min-w-0 flex-1"
             onClick={() => onAction("skip")}
             disabled={saving}
           >
@@ -243,7 +237,7 @@ export function InboxDetailContent({
           <Button
             variant="destructive"
             size="lg"
-            className="min-h-11 min-w-0 flex-1"
+            className="min-w-0 flex-1"
             onClick={() => onAction("delete")}
             disabled={saving}
           >

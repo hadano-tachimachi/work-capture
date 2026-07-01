@@ -17,12 +17,7 @@ export function EditSheetFooter({
 }: EditSheetFooterProps) {
   return (
     <div className="shrink-0 border-t bg-background p-4">
-      <Button
-        size="lg"
-        className="min-h-12 w-full text-base"
-        onClick={onSave}
-        disabled={disabled}
-      >
+      <Button size="lg" className="w-full" onClick={onSave} disabled={disabled}>
         {label}
       </Button>
     </div>
