@@ -1,29 +1,61 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Mic, Monitor } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronRight, ListTodo, Mic, Monitor } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { AiProviderSelector } from "@/components/shared/ai-provider-selector";
 import { useAiProvider } from "@/lib/hooks/use-ai-provider";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
-  {
-    label: "録音画面",
-    href: "/capture",
-    icon: Mic,
-    description: "思考を話す・テキスト入力",
-  },
-  {
-    label: "未整理 inbox（PC）",
-    href: "/inbox",
-    icon: Monitor,
-    description: "担当・優先度を確定",
-  },
-] as const;
+type NavItem = {
+  label: string;
+  href: string;
+  icon: typeof Mic;
+  description: string;
+  badge?: number;
+};
 
 export default function MenuPage() {
   const { provider, setProvider, providers, selectedInfo } = useAiProvider();
+  const [inboxCount, setInboxCount] = useState(0);
+  const [taskCount, setTaskCount] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/inbox/count")
+      .then((r) => r.json())
+      .then((d) => setInboxCount(d.count ?? 0))
+      .catch(() => setInboxCount(0));
+
+    fetch("/api/tasks/count")
+      .then((r) => r.json())
+      .then((d) => setTaskCount(d.active ?? 0))
+      .catch(() => setTaskCount(0));
+  }, []);
+
+  const navItems: NavItem[] = [
+    {
+      label: "録音画面",
+      href: "/capture",
+      icon: Mic,
+      description: "思考を話す・テキスト入力",
+    },
+    {
+      label: "今日やること",
+      href: "/capture/tasks",
+      icon: ListTodo,
+      description: "確定済みタスクを完了",
+      badge: taskCount,
+    },
+    {
+      label: "未整理 inbox（PC）",
+      href: "/inbox",
+      icon: Monitor,
+      description: "担当・優先度を確定",
+      badge: inboxCount,
+    },
+  ];
 
   return (
     <div className="min-h-dvh bg-background p-6">
@@ -37,7 +69,7 @@ export default function MenuPage() {
         </Link>
       </div>
       <nav className="space-y-2">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const Icon = item.icon;
           return (
             <Link
@@ -49,7 +81,14 @@ export default function MenuPage() {
                 <Icon className="size-5" aria-hidden />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium">{item.label}</span>
+                <span className="flex items-center gap-2 text-sm font-medium">
+                  {item.label}
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <Badge className="min-w-5 justify-center bg-primary px-1.5 text-[10px] text-primary-foreground hover:bg-primary">
+                      {item.badge}
+                    </Badge>
+                  )}
+                </span>
                 <span className="block text-xs text-muted-foreground">
                   {item.description}
                 </span>
@@ -85,7 +124,8 @@ export default function MenuPage() {
         <ol className="list-inside list-decimal space-y-2 text-sm text-muted-foreground">
           <li>録音画面で思いついたことを話す</li>
           <li>AI の分解結果を確認・編集して登録</li>
-          <li>PC の未整理 inbox で担当・優先度を確定</li>
+          <li>PC の Inbox Zero で担当・優先度を確定</li>
+          <li>Dashboard でタスクを完了する</li>
         </ol>
         <p className="mt-3 text-xs text-muted-foreground">
           文字起こしはブラウザ、構造化は選択した AI が担当します。

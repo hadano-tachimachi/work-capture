@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Menu, Mic } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
+import { PcWorkHeader } from "@/components/shared/pc-work-header";
 import { EditTasksSheet } from "@/components/mobile/edit-tasks-sheet";
 import { EditDeadlineSheet } from "@/components/mobile/edit-deadline-sheet";
 import { EditMemoSheet } from "@/components/mobile/edit-memo-sheet";
@@ -45,6 +45,7 @@ export default function InboxPage() {
   const [openSheet, setOpenSheet] = useState<
     "tasks" | "deadline" | "memo" | "next" | null
   >(null);
+  const [taskCount, setTaskCount] = useState(0);
   const processedRef = useRef(0);
   const hasInitializedSelection = useRef(false);
 
@@ -52,11 +53,16 @@ export default function InboxPage() {
     let cancelled = false;
 
     async function load() {
-      const res = await fetch("/api/captures");
-      const data = await res.json();
+      const [capturesRes, tasksCountRes] = await Promise.all([
+        fetch("/api/captures"),
+        fetch("/api/tasks/count"),
+      ]);
+      const data = await capturesRes.json();
+      const tasksData = await tasksCountRes.json();
       if (cancelled) return;
       const list: InboxCapture[] = data.captures ?? [];
       setCaptures(list);
+      setTaskCount(tasksData.todo ?? 0);
       setInitialCount((prev) =>
         prev === null && list.length > 0 ? list.length : prev
       );
@@ -388,33 +394,20 @@ export default function InboxPage() {
 
       {/* ── Desktop ── */}
       <div className="hidden min-h-dvh flex-col md:flex">
-        <header className="flex items-center justify-between border-b bg-card px-6 py-4">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold text-primary">Work Capture</h1>
-            <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
-              未整理 inbox
-            </Badge>
-          </div>
-          <div className="flex items-center gap-4">
-            {totalCount > 0 && (
+        <PcWorkHeader
+          mode="inbox"
+          inboxCount={captures.length}
+          taskCount={taskCount}
+          trailing={
+            totalCount > 0 ? (
               <span className="text-sm text-muted-foreground">
                 {captures.length > 0
                   ? `${currentIndex} / ${totalCount} 件目 · 残り ${captures.length} 件`
                   : `${processedCount} 件処理済み`}
               </span>
-            )}
-            <Link
-              href="/capture"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "gap-1"
-              )}
-            >
-              <Mic className="size-4" />
-              スマホで追加
-            </Link>
-          </div>
-        </header>
+            ) : undefined
+          }
+        />
 
         {captures.length === 0 ? (
           <InboxEmptyState processedCount={processedCount} />
