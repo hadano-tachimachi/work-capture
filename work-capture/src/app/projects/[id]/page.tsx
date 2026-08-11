@@ -25,6 +25,10 @@ import {
   priorityLabel,
 } from "@/lib/utils/task-display";
 import { formatDueDateDisplay } from "@/lib/utils/date-helpers";
+import {
+  ProjectResultForm,
+  type ResultFormValues,
+} from "@/components/projects/project-result-form";
 
 type ProjectTask = {
   id: string;
@@ -47,6 +51,16 @@ type PlanGroup = {
   tasks: ProjectTask[];
 };
 
+type ProjectResult = {
+  id: string;
+  plannedMinutes: number | null;
+  actualMinutes: number | null;
+  unexpected: string | null;
+  nextTimeChange: string | null;
+  detail: Record<string, unknown> | null;
+  createdAt: string;
+};
+
 type ProjectDetailResponse = {
   project: {
     id: string;
@@ -57,6 +71,7 @@ type ProjectDetailResponse = {
   };
   planGroups: PlanGroup[];
   looseTasks: ProjectTask[];
+  results: ProjectResult[];
   stats: { planCount: number; taskTotal: number; taskDone: number };
 };
 
@@ -71,6 +86,8 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [savingResult, setSavingResult] = useState(false);
+  const [reopening, setReopening] = useState(false);
 
   const loadDetail = useCallback(async () => {
     const res = await fetch(`/api/projects/${projectId}`);
@@ -144,6 +161,61 @@ export default function ProjectDetailPage() {
     }
   }
 
+  async function completeWithResult(values: ResultFormValues) {
+    setSavingResult(true);
+    try {
+      if (values.kind && values.kind !== detail?.project.kind) {
+        await fetch(`/api/projects/${projectId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ kind: values.kind }),
+        });
+      }
+
+      const resultRes = await fetch(`/api/projects/${projectId}/results`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plannedMinutes: values.plannedMinutes,
+          actualMinutes: values.actualMinutes,
+          unexpected: values.unexpected,
+          nextTimeChange: values.nextTimeChange,
+          equipment: values.equipment,
+          location: values.location,
+          revisionCount: values.revisionCount,
+          attendees: values.attendees,
+        }),
+      });
+      if (!resultRes.ok) return;
+
+      const statusRes = await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "done" }),
+      });
+      if (!statusRes.ok) return;
+
+      await loadDetail();
+    } finally {
+      setSavingResult(false);
+    }
+  }
+
+  async function reopenProject() {
+    setReopening(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      });
+      if (!res.ok) return;
+      await loadDetail();
+    } finally {
+      setReopening(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-dvh items-center justify-center text-muted-foreground">
@@ -163,7 +235,7 @@ export default function ProjectDetailPage() {
     );
   }
 
-  const { project, planGroups, looseTasks, stats } = detail;
+  const { project, planGroups, looseTasks, results, stats } = detail;
   const active = isActiveProjectStatus(project.status);
   const kind = projectKindLabel(project.kind);
   const displayGoal =
@@ -282,35 +354,74 @@ export default function ProjectDetailPage() {
           )}
         </div>
 
-        {planGroups.length === 0 && looseTasks.length === 0 ? (
-          <EmptyProjectBody />
-        ) : (
-          <div className="space-y-8">
-            {planGroups.map((group, index) => (
-              <PlanGroupSection
-                key={group.plan.id}
-                group={group}
-                index={index}
-                updatingTaskId={updatingTaskId}
-                onToggleTask={toggleTaskDone}
-              />
-            ))}
-
-            {looseTasks.length > 0 && (
-              <section>
-                <SectionHeading
-                  label="Planに属していないタスク"
-                  hint="この仕事に紐づく単発タスク"
-                />
-                <TaskList
-                  tasks={looseTasks}
+        <div className="space-y-8">
+          {planGroups.length === 0 && looseTasks.length === 0 ? (
+            <EmptyProjectBody />
+          ) : (
+            <>
+              {planGroups.map((group, index) => (
+                <PlanGroupSection
+                  key={group.plan.id}
+                  group={group}
+                  index={index}
                   updatingTaskId={updatingTaskId}
-                  onToggle={toggleTaskDone}
+                  onToggleTask={toggleTaskDone}
                 />
-              </section>
-            )}
-          </div>
-        )}
+              ))}
+
+              {looseTasks.length > 0 && (
+                <section>
+                  <SectionHeading
+                    label="Planに属していないタスク"
+                    hint="この仕事に紐づく単発タスク"
+                  />
+                  <TaskList
+                    tasks={looseTasks}
+                    updatingTaskId={updatingTaskId}
+                    onToggle={toggleTaskDone}
+                  />
+                </section>
+              )}
+            </>
+          )}
+
+          {results.length > 0 && (
+            <section>
+              <SectionHeading
+                label="Result（振り返り）"
+                hint="この仕事から残した学び"
+              />
+              <div className="space-y-3">
+                {results.map((result) => (
+                  <ResultCard key={result.id} result={result} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {active ? (
+            <ProjectResultForm
+              initialKind={project.kind}
+              saving={savingResult}
+              onSubmit={completeWithResult}
+            />
+          ) : (
+            <div className="rounded-xl border border-dashed px-4 py-5 text-center">
+              <p className="text-sm text-muted-foreground">
+                この仕事は完了済みです。Result は上に表示されています。
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-3"
+                disabled={reopening}
+                onClick={reopenProject}
+              >
+                {reopening ? "処理中…" : "進行中に戻す"}
+              </Button>
+            </div>
+          )}
+        </div>
       </main>
 
       <p className="border-t px-4 py-3 text-center text-xs text-muted-foreground">
@@ -342,6 +453,67 @@ function EmptyProjectBody() {
         Inbox Zero へ
       </Link>
     </div>
+  );
+}
+
+function ResultCard({ result }: { result: ProjectResult }) {
+  const detail = result.detail ?? {};
+  const created = result.createdAt
+    ? new Date(result.createdAt).toLocaleDateString("ja-JP")
+    : "";
+
+  return (
+    <article className="rounded-xl border bg-card p-4 shadow-sm">
+      <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        {created && <span>{created}</span>}
+        {result.plannedMinutes != null && (
+          <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+            見積 {result.plannedMinutes}分
+          </Badge>
+        )}
+        {result.actualMinutes != null && (
+          <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+            実績 {result.actualMinutes}分
+          </Badge>
+        )}
+      </div>
+      {result.unexpected && (
+        <div className="mb-3">
+          <p className="text-xs font-semibold text-muted-foreground">想定外</p>
+          <p className="mt-1 text-sm leading-relaxed">{result.unexpected}</p>
+        </div>
+      )}
+      {result.nextTimeChange && (
+        <div className="mb-3">
+          <p className="text-xs font-semibold text-muted-foreground">
+            次回変えたいこと
+          </p>
+          <p className="mt-1 text-sm leading-relaxed">{result.nextTimeChange}</p>
+        </div>
+      )}
+      <div className="flex flex-wrap gap-1.5">
+        {typeof detail.equipment === "string" && detail.equipment && (
+          <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+            機材: {detail.equipment}
+          </Badge>
+        )}
+        {typeof detail.location === "string" && detail.location && (
+          <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+            現場: {detail.location}
+          </Badge>
+        )}
+        {typeof detail.revisionCount === "number" && (
+          <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+            修正 {detail.revisionCount}回
+          </Badge>
+        )}
+        {typeof detail.attendees === "string" && detail.attendees && (
+          <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+            {detail.attendees}
+          </Badge>
+        )}
+      </div>
+    </article>
   );
 }
 
