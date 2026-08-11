@@ -10,15 +10,35 @@ const PRIORITY_ORDER: Record<string, number> = {
 
 export type TaskStatus = "todo" | "on_hold" | "done";
 
-export type TaskListItem = Task;
+/** 「なぜこのタスクがあるのか」を画面で辿れるように、所属Plan/Projectの名前を添えたTask */
+export type TaskWithContext = Task & {
+  planTitle: string | null;
+  projectTitle: string | null;
+};
+
+export type TaskListItem = TaskWithContext;
 
 export type TaskDetail = {
-  task: Task;
+  task: TaskWithContext;
   nextAction: string | null;
   notes: string[];
 };
 
-function sortTasks(rows: Task[]): Task[] {
+type TaskContextRow = {
+  task: Task;
+  planTitle: string | null;
+  projectTitle: string | null;
+};
+
+function withContext(row: TaskContextRow): TaskWithContext {
+  return {
+    ...row.task,
+    planTitle: row.planTitle,
+    projectTitle: row.projectTitle,
+  };
+}
+
+function sortTasks<T extends Task>(rows: T[]): T[] {
   return [...rows].sort((a, b) => {
     const pa = PRIORITY_ORDER[a.priority ?? "medium"] ?? 1;
     const pb = PRIORITY_ORDER[b.priority ?? "medium"] ?? 1;
@@ -36,14 +56,22 @@ function sortTasks(rows: Task[]): Task[] {
 
 export async function listTasks(
   statuses: TaskStatus[] = ["todo", "on_hold"]
-): Promise<Task[]> {
+): Promise<TaskWithContext[]> {
   const db = getDb();
-  const { tasks } = getTables();
+  const { tasks, plans, projects } = getTables();
 
-  const rows = await db
-    .select()
+  const joined: TaskContextRow[] = await db
+    .select({
+      task: tasks,
+      planTitle: plans.title,
+      projectTitle: projects.title,
+    })
     .from(tasks)
+    .leftJoin(plans, eq(tasks.planId, plans.id))
+    .leftJoin(projects, eq(tasks.projectId, projects.id))
     .where(inArray(tasks.status, statuses));
+
+  const rows = joined.map(withContext);
 
   if (statuses.length === 1 && statuses[0] === "done") {
     return [...rows].sort(
@@ -77,10 +105,22 @@ export async function getTaskCounts(): Promise<{
 
 export async function getTaskById(id: string): Promise<TaskDetail | null> {
   const db = getDb();
-  const { tasks, structuredItems } = getTables();
+  const { tasks, plans, projects, structuredItems } = getTables();
 
-  const [task] = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
-  if (!task) return null;
+  const [row]: TaskContextRow[] = await db
+    .select({
+      task: tasks,
+      planTitle: plans.title,
+      projectTitle: projects.title,
+    })
+    .from(tasks)
+    .leftJoin(plans, eq(tasks.planId, plans.id))
+    .leftJoin(projects, eq(tasks.projectId, projects.id))
+    .where(eq(tasks.id, id))
+    .limit(1);
+  if (!row) return null;
+
+  const task = withContext(row);
 
   let nextAction: string | null = null;
   let notes: string[] = [];

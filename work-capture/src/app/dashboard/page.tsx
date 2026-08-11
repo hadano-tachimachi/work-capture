@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [view, setView] = useState<"active" | "completed">("active");
   const [inboxCount, setInboxCount] = useState(0);
+  const [projectCount, setProjectCount] = useState(0);
   const [doneCount, setDoneCount] = useState(0);
   const [activeCountTotal, setActiveCountTotal] = useState(0);
   const [detail, setDetail] = useState<{
@@ -46,15 +47,23 @@ export default function DashboardPage() {
   const loadTasks = useCallback(async () => {
     const url =
       view === "completed" ? "/api/tasks?status=done" : "/api/tasks";
-    const [tasksRes, inboxRes] = await Promise.all([
+    const [tasksRes, inboxRes, projectsRes] = await Promise.all([
       fetch(url),
       fetch("/api/inbox/count"),
+      fetch("/api/projects"),
     ]);
     const tasksData = await tasksRes.json();
     const inboxData = await inboxRes.json();
+    const projectsData = await projectsRes.json();
     const list: TaskRow[] = tasksData.tasks ?? [];
     setTasks(list);
     setInboxCount(inboxData.count ?? 0);
+    setProjectCount(
+      (projectsData.projects ?? []).filter(
+        (p: { status: string }) =>
+          p.status !== "done" && p.status !== "archived"
+      ).length
+    );
     if (view === "active" && list.length > 0) setHadActiveTasks(true);
     void loadCounts();
     return list;
@@ -200,6 +209,7 @@ export default function DashboardPage() {
         <PcWorkHeader
           mode="dashboard"
           inboxCount={inboxCount}
+          projectCount={projectCount}
           taskCount={todoTasks.length}
           trailing={
             view === "active" && tasks.length > 0 ? (
@@ -257,6 +267,9 @@ export default function DashboardPage() {
                 priority={selected.priority}
                 dueDate={selected.dueDate}
                 project={selected.project}
+                projectId={selected.projectId}
+                planTitle={selected.planTitle}
+                projectTitle={selected.projectTitle}
                 context={selected.context}
                 assignedTo={selected.assignedTo}
                 nextAction={detail.nextAction}
@@ -286,7 +299,7 @@ export default function DashboardPage() {
         )}
 
         <div className="hidden shrink-0 border-t px-6 py-2 text-center text-xs text-muted-foreground md:block">
-          Capture → Inbox Zero → Dashboard の順で仕事が前に進みます
+          Capture → Inbox Zero → 仕事（Projects）→ Dashboard の順で仕事が前に進みます
         </div>
       </div>
     </>

@@ -41,9 +41,56 @@ export const structuredItems = pgTable("structured_items", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const projects = pgTable("projects", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  goal: text("goal"),
+  kind: text("kind"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const plans = pgTable("plans", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id").references(() => projects.id),
+  workCaptureId: uuid("work_capture_id").references(() => workCaptures.id),
+  title: text("title").notNull(),
+  goal: text("goal"),
+  context: text("context"),
+  dueDate: text("due_date"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const planSteps = pgTable("plan_steps", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  planId: uuid("plan_id")
+    .references(() => plans.id)
+    .notNull(),
+  content: text("content").notNull(),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const results = pgTable("results", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id")
+    .references(() => projects.id)
+    .notNull(),
+  plannedMinutes: integer("planned_minutes"),
+  actualMinutes: integer("actual_minutes"),
+  unexpected: text("unexpected"),
+  nextTimeChange: text("next_time_change"),
+  detail: jsonb("detail"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const tasks = pgTable("tasks", {
   id: uuid("id").primaryKey().defaultRandom(),
   workCaptureId: uuid("work_capture_id").references(() => workCaptures.id),
+  planId: uuid("plan_id").references(() => plans.id),
+  projectId: uuid("project_id").references(() => projects.id),
   title: text("title").notNull(),
   description: text("description"),
   dueDate: text("due_date"),
@@ -59,3 +106,7 @@ export type WorkCapture = typeof workCaptures.$inferSelect;
 export type StructuredItem = typeof structuredItems.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
 export type AiParseResult = typeof aiParseResults.$inferSelect;
+export type Project = typeof projects.$inferSelect;
+export type Plan = typeof plans.$inferSelect;
+export type PlanStep = typeof planSteps.$inferSelect;
+export type Result = typeof results.$inferSelect;

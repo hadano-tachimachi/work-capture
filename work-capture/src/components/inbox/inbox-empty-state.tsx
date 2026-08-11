@@ -31,7 +31,7 @@ export function InboxEmptyState({
         <Inbox className="size-8" />
       </div>
       <p className="text-muted-foreground">
-        未整理の Work Capture はありません
+        未整理の Capture はありません
       </p>
       {processedCount > 0 && (
         <p className={cn("text-sm", phaseAccentClasses.organize.text)}>

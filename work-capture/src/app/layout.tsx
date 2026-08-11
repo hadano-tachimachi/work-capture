@@ -14,12 +14,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Work Capture",
+  title: "Work Loop",
   description: "思考を止めずに、仕事を前へ進める。",
 };
 
 export const viewport = {
-  themeColor: "#7c3aed",
+  themeColor: "#224099",
 };
 
 export default function RootLayout({

@@ -38,7 +38,7 @@ export const ITEM_TYPE_LABELS: Record<string, string> = {
   purpose: "目的",
   background: "背景",
   task: "タスク",
-  action: "アクションプラン",
+  action: "道筋（Plan Steps）",
   note: "メモ",
   decision: "判断事項",
   due_date: "期限",

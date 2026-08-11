@@ -11,6 +11,8 @@ import {
 import type { AiProvider } from "@/lib/ai/types";
 import { ProviderNotConfiguredError } from "@/lib/ai/types";
 import { getDb, getTables } from "@/lib/db";
+import { createPlanWithSteps } from "@/lib/services/plans";
+import { resolveProjectId } from "@/lib/services/projects";
 import {
   structuredOutputSchema,
   structuredOutputToItems,
@@ -286,17 +288,23 @@ export async function updateStructuredItems(
   }
 }
 
+export type ConfirmCaptureData = {
+  taskTitles: string[];
+  purpose?: string;
+  dueDate?: string;
+  priority?: string;
+  project?: string;
+  context?: string;
+  assignedTo?: string;
+  /** "plan": Goal/Context/Stepsを持つPlanとして保存する。"task"（省略時）: 単発Taskのまま保存する */
+  mode?: "plan" | "task";
+  /** mode: "plan" のときのPlan Steps（action_plan由来、順序あり） */
+  steps?: string[];
+};
+
 export async function confirmCaptureToTasks(
   captureId: string,
-  data: {
-    taskTitles: string[];
-    purpose?: string;
-    dueDate?: string;
-    priority?: string;
-    project?: string;
-    context?: string;
-    assignedTo?: string;
-  }
+  data: ConfirmCaptureData
 ) {
   const db = getDb();
   const { workCaptures, tasks } = getTables();
@@ -306,9 +314,27 @@ export async function confirmCaptureToTasks(
       ? data.taskTitles.filter((t) => t.trim())
       : [data.purpose?.trim() || "（タスク未設定）"];
 
+  const projectId = await resolveProjectId(data.project);
+
+  let planId: string | null = null;
+  if (data.mode === "plan") {
+    const { plan } = await createPlanWithSteps({
+      workCaptureId: captureId,
+      projectId,
+      title: data.purpose?.trim() || titles[0] || "（無題のPlan）",
+      goal: data.purpose,
+      context: data.context,
+      dueDate: data.dueDate,
+      steps: data.steps ?? [],
+    });
+    planId = plan.id;
+  }
+
   for (const title of titles) {
     await db.insert(tasks).values({
       workCaptureId: captureId,
+      planId,
+      projectId,
       title,
       description: data.purpose,
       dueDate: data.dueDate,
@@ -338,7 +364,20 @@ export async function skipCapture(captureId: string) {
 
 export async function deleteCapture(captureId: string) {
   const db = getDb();
-  const { workCaptures, aiParseResults, structuredItems, tasks } = getTables();
+  const { workCaptures, aiParseResults, structuredItems, tasks, plans, planSteps } =
+    getTables();
+
+  // tasks.plan_id が plans を参照しているため、plans より先に削除する
+  await db.delete(tasks).where(eq(tasks.workCaptureId, captureId));
+
+  const relatedPlans = await db
+    .select()
+    .from(plans)
+    .where(eq(plans.workCaptureId, captureId));
+  for (const plan of relatedPlans) {
+    await db.delete(planSteps).where(eq(planSteps.planId, plan.id));
+  }
+  await db.delete(plans).where(eq(plans.workCaptureId, captureId));
 
   await db
     .delete(aiParseResults)
@@ -346,6 +385,5 @@ export async function deleteCapture(captureId: string) {
   await db
     .delete(structuredItems)
     .where(eq(structuredItems.workCaptureId, captureId));
-  await db.delete(tasks).where(eq(tasks.workCaptureId, captureId));
   await db.delete(workCaptures).where(eq(workCaptures.id, captureId));
 }

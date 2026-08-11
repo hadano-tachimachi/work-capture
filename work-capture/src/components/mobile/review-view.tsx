@@ -11,10 +11,6 @@ import {
 } from "@/components/ui/collapsible";
 import { SectionCard } from "@/components/shared/section-card";
 import { ValidationFailedAlert } from "@/components/shared/validation-failed-alert";
-import { EditTasksSheet } from "@/components/mobile/edit-tasks-sheet";
-import { EditDeadlineSheet } from "@/components/mobile/edit-deadline-sheet";
-import { EditMemoSheet } from "@/components/mobile/edit-memo-sheet";
-import { EditNextStepSheet } from "@/components/mobile/edit-next-step-sheet";
 import { ITEM_TYPE_LABELS } from "@/lib/utils/capture-helpers";
 import { formatDueDateDisplay, normalizeDueDateValue } from "@/lib/utils/date-helpers";
 import { cn } from "@/lib/utils";
@@ -38,9 +34,6 @@ export function ReviewView({ captureId }: ReviewViewProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [transcriptOpen, setTranscriptOpen] = useState(true);
-  const [openSheet, setOpenSheet] = useState<
-    "tasks" | "deadline" | "memo" | "next" | null
-  >(null);
 
   useEffect(() => {
     fetch(`/api/captures?id=${captureId}`)
@@ -57,35 +50,10 @@ export function ReviewView({ captureId }: ReviewViewProps) {
     return items.filter((i) => i.type === type).map((i) => i.content);
   }
 
-  function setByType(type: string, values: string[]) {
-    setItems((prev) => {
-      const other = prev.filter((i) => i.type !== type);
-      const newItems = values.map((content, i) => ({
-        type,
-        content,
-        sortOrder: i,
-      }));
-      return [...other, ...newItems];
-    });
-  }
-
-  async function handleRegister() {
+  async function handleNext() {
     setSaving(true);
     setError("");
     try {
-      await fetch("/api/captures", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          captureId,
-          action: "update_items",
-          items: items.map((item, i) => ({
-            type: item.type,
-            content: item.content,
-            sortOrder: i,
-          })),
-        }),
-      });
       await fetch("/api/captures", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -96,13 +64,14 @@ export function ReviewView({ captureId }: ReviewViewProps) {
       });
       router.push(`/capture/complete?id=${captureId}`);
     } catch {
-      setError("登録に失敗しました");
+      setError("処理に失敗しました");
     } finally {
       setSaving(false);
     }
   }
 
   const tasks = getByType("task");
+  const steps = getByType("action");
   const dueDateRaw = getByType("due_date")[0] ?? "";
   const dueDate = normalizeDueDateValue(dueDateRaw) ?? "";
   const memos = getByType("note");
@@ -192,10 +161,27 @@ export function ReviewView({ captureId }: ReviewViewProps) {
           />
         )}
 
-        <SectionCard
-          label={ITEM_TYPE_LABELS.task}
-          preview={
-            tasks.length > 0 ? (
+        {steps.length > 0 && (
+          <SectionCard
+            label={ITEM_TYPE_LABELS.action}
+            preview={
+              <ol className="space-y-1">
+                {steps.map((s, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-muted-foreground">{i + 1}.</span>
+                    <span>{s}</span>
+                  </li>
+                ))}
+              </ol>
+            }
+            interactive={false}
+          />
+        )}
+
+        {tasks.length > 0 && (
+          <SectionCard
+            label={ITEM_TYPE_LABELS.task}
+            preview={
               <ul className="space-y-1">
                 {tasks.map((t, i) => (
                   <li key={i} className="flex items-start gap-2">
@@ -204,26 +190,26 @@ export function ReviewView({ captureId }: ReviewViewProps) {
                   </li>
                 ))}
               </ul>
-            ) : (
-              "タップしてタスクを追加"
-            )
-          }
-          onClick={() => setOpenSheet("tasks")}
-        />
+            }
+            interactive={false}
+          />
+        )}
 
-        <SectionCard
-          label={ITEM_TYPE_LABELS.due_date}
-          preview={
-            dueDate ? formatDueDateDisplay(dueDate) : "タップして期限を設定"
-          }
-          onClick={() => setOpenSheet("deadline")}
-        />
+        {dueDate && (
+          <SectionCard
+            label={ITEM_TYPE_LABELS.due_date}
+            preview={formatDueDateDisplay(dueDate)}
+            interactive={false}
+          />
+        )}
 
-        <SectionCard
-          label={ITEM_TYPE_LABELS.note}
-          preview={memos.length > 0 ? memos.join(" / ") : "なし"}
-          onClick={() => setOpenSheet("memo")}
-        />
+        {memos.length > 0 && (
+          <SectionCard
+            label={ITEM_TYPE_LABELS.note}
+            preview={memos.join(" / ")}
+            interactive={false}
+          />
+        )}
 
         {decisions.length > 0 && (
           <SectionCard
@@ -233,50 +219,26 @@ export function ReviewView({ captureId }: ReviewViewProps) {
           />
         )}
 
-        <SectionCard
-          label={ITEM_TYPE_LABELS.next_action}
-          preview={nextAction || "タップして次の一歩を選択"}
-          onClick={() => setOpenSheet("next")}
-        />
+        {nextAction && (
+          <SectionCard
+            label={ITEM_TYPE_LABELS.next_action}
+            preview={nextAction}
+            interactive={false}
+          />
+        )}
       </main>
 
       <footer className="fixed inset-x-0 bottom-0 border-t bg-background/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
         {error && (
           <p className="mb-2 text-sm text-destructive">{error}</p>
         )}
-        <Button size="lg" className="w-full" onClick={handleRegister} disabled={saving}>
-          {saving ? "登録中…" : "この内容で登録"}
+        <Button size="lg" className="w-full" onClick={handleNext} disabled={saving}>
+          {saving ? "処理中…" : "内容を確認して次へ"}
         </Button>
         <p className="mt-2 text-center text-xs text-muted-foreground">
-          各項目をタップして内容を編集できます
+          担当・優先度・Plan/Taskの決定などはInboxで行います
         </p>
       </footer>
-
-      <EditTasksSheet
-        open={openSheet === "tasks"}
-        onOpenChange={(o) => !o && setOpenSheet(null)}
-        tasks={tasks}
-        onSave={(v) => setByType("task", v)}
-      />
-      <EditDeadlineSheet
-        open={openSheet === "deadline"}
-        onOpenChange={(o) => !o && setOpenSheet(null)}
-        value={dueDate}
-        onSave={(v) => setByType("due_date", v ? [v] : [])}
-      />
-      <EditMemoSheet
-        open={openSheet === "memo"}
-        onOpenChange={(o) => !o && setOpenSheet(null)}
-        memos={memos}
-        onSave={(v) => setByType("note", v)}
-      />
-      <EditNextStepSheet
-        open={openSheet === "next"}
-        onOpenChange={(o) => !o && setOpenSheet(null)}
-        value={nextAction}
-        taskOptions={tasks}
-        onSave={(v) => setByType("next_action", v ? [v] : [])}
-      />
     </div>
   );
 }

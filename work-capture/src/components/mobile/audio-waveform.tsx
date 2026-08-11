@@ -39,7 +39,7 @@ export function AudioWaveform({ stream, className }: AudioWaveformProps) {
 
       for (let i = 0; i < bufferLength; i++) {
         const barHeight = (dataArray[i] / 255) * canvas.height * 0.85;
-        ctx.fillStyle = "oklch(0.55 0.22 300)";
+        ctx.fillStyle = "oklch(0.5 0.16 265)";
         ctx.beginPath();
         ctx.roundRect(
           x,

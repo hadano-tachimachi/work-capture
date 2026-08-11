@@ -27,7 +27,9 @@ export function StatusScreen({
       <div className="mb-6 flex size-20 items-center justify-center rounded-full bg-primary/10 text-primary">
         {icon}
       </div>
-      <h1 className="mb-2 text-center text-xl font-semibold">{title}</h1>
+      <h1 className="mb-2 text-center text-2xl font-bold tracking-tight">
+        {title}
+      </h1>
       {subtitle && (
         <p className="mb-8 text-center text-sm text-muted-foreground">
           {subtitle}

@@ -1,5 +1,8 @@
-/** Capture → Organize → Execute のフェーズ別アクセント */
-export type PhaseAccent = "capture" | "organize" | "execute";
+/**
+ * Capture → Organize → Execute のフェーズ別アクセント。
+ * project は3フェーズを貫く「仕事の器」の面（Projects画面）に使う。
+ */
+export type PhaseAccent = "capture" | "organize" | "execute" | "project";
 
 export const phaseAccentClasses: Record<
   PhaseAccent,
@@ -44,5 +47,16 @@ export const phaseAccentClasses: Record<
       "bg-tertiary-muted text-tertiary-muted-foreground shadow-sm ring-1 ring-tertiary/35 font-semibold",
     selected:
       "border-l-4 border-l-tertiary bg-tertiary-muted/55 ring-1 ring-tertiary/25",
+  },
+  project: {
+    step: "bg-primary/15 text-primary",
+    icon: "bg-primary/15 text-primary",
+    badge: "bg-primary text-primary-foreground hover:bg-primary",
+    badgeSoft: "bg-primary/15 text-primary hover:bg-primary/15",
+    border: "border-l-primary border-primary/40",
+    text: "text-primary",
+    navActive:
+      "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/25 font-semibold",
+    selected: "border-l-4 border-l-primary bg-primary/10 ring-1 ring-primary/20",
   },
 };

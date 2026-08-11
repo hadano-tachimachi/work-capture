@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -35,6 +36,7 @@ type InboxDetailContentProps = {
   createdAt?: string;
   validationStatus: string;
   tasks: string[];
+  steps: string[];
   memos: string[];
   nextAction: string;
   dueDate: string;
@@ -42,15 +44,18 @@ type InboxDetailContentProps = {
   priority: string;
   project: string;
   context: string;
+  mode: "plan" | "task";
+  projectSuggestions: string[];
   saving: boolean;
   compact?: boolean;
   getByType: (type: string) => string[];
-  onOpenSheet: (sheet: "tasks" | "deadline" | "memo" | "next") => void;
+  onOpenSheet: (sheet: "tasks" | "steps" | "deadline" | "memo" | "next") => void;
   onAssignedToChange: (value: string) => void;
   onPriorityChange: (value: string) => void;
   onProjectChange: (value: string) => void;
   onContextChange: (value: string) => void;
   onDueDateChange: (value: string) => void;
+  onModeChange: (mode: "plan" | "task") => void;
   onAction: (action: "confirm" | "skip" | "delete") => void;
   className?: string;
 };
@@ -62,6 +67,7 @@ export function InboxDetailContent({
   createdAt,
   validationStatus,
   tasks,
+  steps,
   memos,
   nextAction,
   dueDate,
@@ -69,6 +75,8 @@ export function InboxDetailContent({
   priority,
   project,
   context,
+  mode,
+  projectSuggestions,
   saving,
   compact = false,
   getByType,
@@ -78,6 +86,7 @@ export function InboxDetailContent({
   onProjectChange,
   onContextChange,
   onDueDateChange: _onDueDateChange,
+  onModeChange,
   onAction,
   className,
 }: InboxDetailContentProps) {
@@ -114,6 +123,25 @@ export function InboxDetailContent({
           interactive={false}
         />
       )}
+
+      <SectionCard
+        label={ITEM_TYPE_LABELS.action}
+        preview={
+          steps.length > 0 ? (
+            <ol className="space-y-1">
+              {steps.map((s, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-muted-foreground">{i + 1}.</span>
+                  <span>{s}</span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            "タップして道筋を追加"
+          )
+        }
+        onClick={() => onOpenSheet("steps")}
+      />
 
       <SectionCard
         label={ITEM_TYPE_LABELS.task}
@@ -166,6 +194,44 @@ export function InboxDetailContent({
 
   const confirmFields = (
     <>
+      <div>
+        <Label className="mb-2 block">保存の形</Label>
+        <RadioGroup
+          value={mode}
+          onValueChange={(v) => v && onModeChange(v as "plan" | "task")}
+          className="grid-cols-2 gap-2"
+        >
+          <label
+            className={cn(
+              "flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm",
+              mode === "plan" && "border-primary bg-primary/5"
+            )}
+          >
+            <RadioGroupItem value="plan" className="mt-0.5" />
+            <span>
+              <span className="block font-medium">Planにする</span>
+              <span className="block text-xs text-muted-foreground">
+                目的・道筋を残す仕事
+              </span>
+            </span>
+          </label>
+          <label
+            className={cn(
+              "flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm",
+              mode === "task" && "border-primary bg-primary/5"
+            )}
+          >
+            <RadioGroupItem value="task" className="mt-0.5" />
+            <span>
+              <span className="block font-medium">単発Taskにする</span>
+              <span className="block text-xs text-muted-foreground">
+                日常の小さな段取り
+              </span>
+            </span>
+          </label>
+        </RadioGroup>
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label>担当</Label>
@@ -191,12 +257,18 @@ export function InboxDetailContent({
           </Select>
         </div>
         <div>
-          <Label>プロジェクト</Label>
+          <Label>プロジェクト（任意）</Label>
           <SpeechInput
             value={project}
             onChange={onProjectChange}
             placeholder="例：見積案件"
+            list="project-suggestions"
           />
+          <datalist id="project-suggestions">
+            {projectSuggestions.map((title) => (
+              <option key={title} value={title} />
+            ))}
+          </datalist>
         </div>
         <div>
           <Label>コンテキスト</Label>

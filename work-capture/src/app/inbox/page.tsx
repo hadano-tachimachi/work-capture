@@ -7,6 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PcWorkHeader } from "@/components/shared/pc-work-header";
 import { EditTasksSheet } from "@/components/mobile/edit-tasks-sheet";
+import { EditStepsSheet } from "@/components/mobile/edit-steps-sheet";
 import { EditDeadlineSheet } from "@/components/mobile/edit-deadline-sheet";
 import { EditMemoSheet } from "@/components/mobile/edit-memo-sheet";
 import { EditNextStepSheet } from "@/components/mobile/edit-next-step-sheet";
@@ -40,12 +41,15 @@ export default function InboxPage() {
   const [context, setContext] = useState("");
   const [assignedTo, setAssignedTo] = useState("自分");
   const [dueDate, setDueDate] = useState("");
+  const [mode, setMode] = useState<"plan" | "task">("task");
+  const [projectSuggestions, setProjectSuggestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [openSheet, setOpenSheet] = useState<
-    "tasks" | "deadline" | "memo" | "next" | null
+    "tasks" | "steps" | "deadline" | "memo" | "next" | null
   >(null);
   const [taskCount, setTaskCount] = useState(0);
+  const [projectCount, setProjectCount] = useState(0);
   const processedRef = useRef(0);
   const hasInitializedSelection = useRef(false);
 
@@ -53,16 +57,24 @@ export default function InboxPage() {
     let cancelled = false;
 
     async function load() {
-      const [capturesRes, tasksCountRes] = await Promise.all([
+      const [capturesRes, tasksCountRes, projectsRes] = await Promise.all([
         fetch("/api/captures"),
         fetch("/api/tasks/count"),
+        fetch("/api/projects"),
       ]);
       const data = await capturesRes.json();
       const tasksData = await tasksCountRes.json();
+      const projectsData = await projectsRes.json();
       if (cancelled) return;
       const list: InboxCapture[] = data.captures ?? [];
       setCaptures(list);
       setTaskCount(tasksData.todo ?? 0);
+      setProjectCount(
+        (projectsData.projects ?? []).filter(
+          (p: { status: string }) =>
+            p.status !== "done" && p.status !== "archived"
+        ).length
+      );
       setInitialCount((prev) =>
         prev === null && list.length > 0 ? list.length : prev
       );
@@ -85,6 +97,18 @@ export default function InboxPage() {
   }, []);
 
   useEffect(() => {
+    fetch("/api/projects")
+      .then((r) => r.json())
+      .then((data) => {
+        const titles = (data.projects ?? []).map(
+          (p: { title: string }) => p.title
+        );
+        setProjectSuggestions(titles);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     if (!selectedId) return;
     let cancelled = false;
 
@@ -103,6 +127,16 @@ export default function InboxPage() {
       setDueDate(normalizeDueDateValue(due?.content ?? "") ?? "");
       setProject(proj?.content ?? "");
       setContext(ctx?.content ?? "");
+
+      // Phase 0で言語化した基準（あくまで初期選択のヒント。最終判断は人間）
+      const taskCount = grouped.filter((i) => i.type === "task").length;
+      const actionCount = grouped.filter((i) => i.type === "action").length;
+      const hasProjectCandidate = Boolean(proj?.content?.trim());
+      setMode(
+        hasProjectCandidate || (actionCount >= 2 && taskCount >= 3)
+          ? "plan"
+          : "task"
+      );
     }
 
     void loadDetail();
@@ -167,6 +201,7 @@ export default function InboxPage() {
       if (action === "confirm") {
         const taskTitles = getByType("task");
         const purpose = getByType("purpose")[0];
+        const stepsToSave = getByType("action");
         await fetch("/api/captures", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -181,6 +216,8 @@ export default function InboxPage() {
               project,
               context,
               assignedTo,
+              mode,
+              steps: stepsToSave,
             },
           }),
         });
@@ -228,6 +265,7 @@ export default function InboxPage() {
   }
 
   const tasks = getByType("task");
+  const steps = getByType("action");
   const memos = getByType("note");
   const nextAction = getByType("next_action")[0] ?? "";
   const processedCount = processedRef.current;
@@ -243,6 +281,7 @@ export default function InboxPage() {
     createdAt: selectedCapture?.createdAt,
     validationStatus,
     tasks,
+    steps,
     memos,
     nextAction,
     dueDate,
@@ -250,6 +289,8 @@ export default function InboxPage() {
     priority,
     project,
     context,
+    mode,
+    projectSuggestions,
     saving,
     getByType,
     onOpenSheet: setOpenSheet,
@@ -258,6 +299,7 @@ export default function InboxPage() {
     onProjectChange: setProject,
     onContextChange: setContext,
     onDueDateChange: (v: string) => setByType("due_date", v ? [v] : []),
+    onModeChange: setMode,
     onAction: handleAction,
   };
 
@@ -268,6 +310,12 @@ export default function InboxPage() {
         onOpenChange={(o) => !o && setOpenSheet(null)}
         tasks={tasks}
         onSave={(v) => handleSheetSave("task", v)}
+      />
+      <EditStepsSheet
+        open={openSheet === "steps"}
+        onOpenChange={(o) => !o && setOpenSheet(null)}
+        steps={steps}
+        onSave={(v) => handleSheetSave("action", v)}
       />
       <EditDeadlineSheet
         open={openSheet === "deadline"}
@@ -397,6 +445,7 @@ export default function InboxPage() {
         <PcWorkHeader
           mode="inbox"
           inboxCount={captures.length}
+          projectCount={projectCount}
           taskCount={taskCount}
           trailing={
             totalCount > 0 ? (

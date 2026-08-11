@@ -79,6 +79,9 @@ export default function CaptureTasksPage() {
           priority={selected.priority}
           dueDate={selected.dueDate}
           project={selected.project}
+          projectId={selected.projectId}
+          planTitle={selected.planTitle}
+          projectTitle={selected.projectTitle}
           context={selected.context}
           assignedTo={selected.assignedTo}
           nextAction={detail.nextAction}

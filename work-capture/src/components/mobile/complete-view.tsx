@@ -10,22 +10,22 @@ export function CompleteView() {
   return (
     <StatusScreen
       icon={<CheckCircle2 className="size-10" strokeWidth={1.75} />}
-      title="登録しました"
-      subtitle="Inbox Zero で確認・整理できます"
+      title="内容を保存しました"
+      subtitle="Inbox Zero で確認して、タスクとして確定させましょう"
     >
       <div className="flex w-full max-w-sm flex-col gap-3">
         <Link
+          href="/inbox"
+          className={cn(buttonVariants(), "justify-center")}
+        >
+          Inbox Zero で確認
+        </Link>
+        <Link
           href="/capture"
-          className={cn(buttonVariants(), "justify-center gap-2")}
+          className={cn(buttonVariants({ variant: "outline" }), "justify-center gap-2")}
         >
           <Plus className="size-4" />
           続けて追加する
-        </Link>
-        <Link
-          href="/inbox"
-          className={cn(buttonVariants({ variant: "outline" }), "justify-center")}
-        >
-          Inbox Zero で確認
         </Link>
       </div>
     </StatusScreen>

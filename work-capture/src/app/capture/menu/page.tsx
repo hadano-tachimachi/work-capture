@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   ChevronDown,
   ChevronRight,
+  FolderKanban,
   Inbox,
   ListTodo,
   Mic,
@@ -13,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { AiProviderSelector } from "@/components/shared/ai-provider-selector";
+import { WorkLoopBrand } from "@/components/shared/work-loop-brand";
 import { useAiProvider } from "@/lib/hooks/use-ai-provider";
 import { cn } from "@/lib/utils";
 import { phaseAccentClasses, type PhaseAccent } from "@/lib/utils/phase-colors";
@@ -81,6 +83,7 @@ function FlowStepLink({ item }: { item: FlowStep }) {
 export default function MenuPage() {
   const { provider, setProvider, providers, selectedInfo } = useAiProvider();
   const [inboxCount, setInboxCount] = useState(0);
+  const [projectCount, setProjectCount] = useState(0);
   const [taskCount, setTaskCount] = useState(0);
 
   useEffect(() => {
@@ -88,6 +91,18 @@ export default function MenuPage() {
       .then((r) => r.json())
       .then((d) => setInboxCount(d.count ?? 0))
       .catch(() => setInboxCount(0));
+
+    fetch("/api/projects")
+      .then((r) => r.json())
+      .then((d) =>
+        setProjectCount(
+          (d.projects ?? []).filter(
+            (p: { status: string }) =>
+              p.status !== "done" && p.status !== "archived"
+          ).length
+        )
+      )
+      .catch(() => setProjectCount(0));
 
     fetch("/api/tasks/count")
       .then((r) => r.json())
@@ -115,6 +130,15 @@ export default function MenuPage() {
     },
     {
       step: 3,
+      label: "仕事（Projects）",
+      href: "/projects",
+      icon: FolderKanban,
+      description: "Goal → Plan → Steps → Tasks を辿る",
+      badge: projectCount,
+      phase: "project",
+    },
+    {
+      step: 4,
       label: "今日やること",
       href: "/capture/tasks",
       icon: ListTodo,
@@ -128,9 +152,11 @@ export default function MenuPage() {
     <div className="min-h-dvh bg-background px-6 pb-8 pt-4">
       <div className="mb-6 flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Work Capture</h1>
+          <h1>
+            <WorkLoopBrand size="lg" />
+          </h1>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Capture → Organize → Execute
+            Capture → Organize → Project → Execute
           </p>
         </div>
         <Link

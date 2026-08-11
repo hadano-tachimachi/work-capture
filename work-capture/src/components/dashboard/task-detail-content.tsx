@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,9 @@ type TaskDetailContentProps = {
   priority: string | null;
   dueDate: string | null;
   project: string | null;
+  projectId?: string | null;
+  planTitle?: string | null;
+  projectTitle?: string | null;
   context: string | null;
   assignedTo: string | null;
   nextAction: string | null;
@@ -40,6 +44,9 @@ export function TaskDetailContent({
   priority,
   dueDate,
   project,
+  projectId,
+  planTitle,
+  projectTitle,
   context,
   assignedTo,
   nextAction,
@@ -55,6 +62,8 @@ export function TaskDetailContent({
 }: TaskDetailContentProps) {
   const [notesOpen, setNotesOpen] = useState(false);
   const isDone = status === "done";
+  const projectLabel = projectTitle?.trim() || project?.trim() || null;
+  const planLabel = planTitle?.trim() || null;
 
   return (
     <div
@@ -64,14 +73,39 @@ export function TaskDetailContent({
       )}
     >
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6">
-        <h2 className="text-xl font-semibold leading-snug">{title}</h2>
+        {(projectLabel || planLabel) && (
+          <p className="mb-2 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+            {projectId && projectLabel ? (
+              <Link
+                href={`/projects/${projectId}`}
+                className={cn(
+                  "font-medium underline-offset-2 hover:underline",
+                  phaseAccentClasses.project.text
+                )}
+              >
+                {projectLabel}
+              </Link>
+            ) : projectLabel ? (
+              <span>{projectLabel}</span>
+            ) : null}
+            {projectLabel && planLabel && (
+              <span className="text-muted-foreground/70" aria-hidden>
+                ›
+              </span>
+            )}
+            {planLabel && <span>{planLabel}</span>}
+          </p>
+        )}
+
+        <h2 className="text-2xl font-bold leading-snug tracking-tight">
+          {title}
+        </h2>
 
         <div className="mt-3 flex flex-wrap gap-2">
           <Badge variant="outline">{priorityLabel(priority)}</Badge>
           <Badge variant="outline">
             期限: {dueDate ? formatDueDateDisplay(dueDate) : "なし"}
           </Badge>
-          {project && <Badge variant="outline">{project}</Badge>}
           {context && <Badge variant="outline">{context}</Badge>}
           {assignedTo && <Badge variant="outline">担当: {assignedTo}</Badge>}
           {status === "on_hold" && (
@@ -93,7 +127,7 @@ export function TaskDetailContent({
 
         {description && (
           <div className="mt-6">
-            <p className="mb-2 text-sm font-medium text-muted-foreground">
+            <p className="mb-2 text-sm font-semibold text-foreground/80">
               説明
             </p>
             <p className="text-sm leading-relaxed">{description}</p>
@@ -101,8 +135,8 @@ export function TaskDetailContent({
         )}
 
         {nextAction && (
-          <div className="mt-6 rounded-xl border bg-capture-surface p-4">
-            <p className="mb-1 text-sm font-medium text-muted-foreground">
+          <div className="mt-6 rounded-xl border-l-4 border-y border-r border-l-primary border-y-border border-r-border bg-primary/5 p-4 shadow-sm">
+            <p className="mb-1 text-sm font-semibold text-primary">
               次の一歩
             </p>
             <p className="text-sm leading-relaxed">{nextAction}</p>
@@ -115,7 +149,7 @@ export function TaskDetailContent({
             onOpenChange={setNotesOpen}
             className="mt-4"
           >
-            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-xl border bg-capture-surface px-4 py-3 text-sm font-medium">
+            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-xl border bg-capture-surface px-4 py-3 text-sm font-semibold text-foreground/80 shadow-sm">
               メモ（{notes.length}）
               <ChevronDown
                 className={cn(
@@ -124,7 +158,7 @@ export function TaskDetailContent({
                 )}
               />
             </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2 space-y-2 rounded-xl border bg-card p-4 text-sm leading-relaxed">
+            <CollapsibleContent className="mt-2 space-y-2 rounded-xl border bg-card p-4 text-sm leading-relaxed shadow-sm">
               {notes.map((note, i) => (
                 <p key={i}>{note}</p>
               ))}
