@@ -16,6 +16,7 @@ import { resolveProjectId } from "@/lib/services/projects";
 import {
   structuredOutputSchema,
   structuredOutputToItems,
+  learnReferencesToItems,
 } from "@/lib/validation/structure-schema";
 
 export type ProcessCaptureResult = {
@@ -127,7 +128,12 @@ async function processStructure(
     if (validation.success) {
       validationStatus = "passed";
 
-      const items = structuredOutputToItems(validation.data);
+      const items = [
+        ...structuredOutputToItems(validation.data),
+        ...learnReferencesToItems(
+          (result.learnReferences ?? []).map((ref) => ref.line)
+        ),
+      ];
       if (items.length > 0) {
         await db.insert(structuredItems).values(
           items.map((item) => ({

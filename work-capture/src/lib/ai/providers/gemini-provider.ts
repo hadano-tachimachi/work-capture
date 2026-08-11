@@ -32,7 +32,8 @@ export async function transcribeWithGemini(
 }
 
 export async function structureWithGemini(
-  transcript: string
+  transcript: string,
+  learnSection?: string | null
 ): Promise<StructureResult> {
   const genAI = getClient();
   const model = genAI.getGenerativeModel({
@@ -95,7 +96,7 @@ export async function structureWithGemini(
 
   try {
     const result = await model.generateContent(
-      STRUCTURE_USER_PROMPT(transcript)
+      STRUCTURE_USER_PROMPT(transcript, new Date(), learnSection)
     );
     const rawOutput = result.response.text();
     const parsed = JSON.parse(rawOutput);

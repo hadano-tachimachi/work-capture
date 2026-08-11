@@ -13,7 +13,8 @@ import { getModelName } from "@/lib/ai/providers/config";
 const MODEL = getModelName("claude");
 
 export async function structureWithClaude(
-  transcript: string
+  transcript: string,
+  learnSection?: string | null
 ): Promise<StructureResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
@@ -40,7 +41,7 @@ export async function structureWithClaude(
       messages: [
         {
           role: "user",
-          content: STRUCTURE_USER_PROMPT(transcript),
+          content: STRUCTURE_USER_PROMPT(transcript, new Date(), learnSection),
         },
       ],
     }),

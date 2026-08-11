@@ -124,6 +124,22 @@ export function InboxDetailContent({
         />
       )}
 
+      {getByType("learn_ref").length > 0 && (
+        <SectionCard
+          label={ITEM_TYPE_LABELS.learn_ref}
+          preview={
+            <ul className="space-y-2">
+              {getByType("learn_ref").map((line, i) => (
+                <li key={i} className="text-sm leading-relaxed">
+                  {line}
+                </li>
+              ))}
+            </ul>
+          }
+          interactive={false}
+        />
+      )}
+
       <SectionCard
         label={ITEM_TYPE_LABELS.action}
         preview={

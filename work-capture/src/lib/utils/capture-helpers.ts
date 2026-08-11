@@ -46,4 +46,5 @@ export const ITEM_TYPE_LABELS: Record<string, string> = {
   uncertainty: "不明点",
   project_candidate: "Project候補",
   context_candidate: "Context候補",
+  learn_ref: "過去の同種から学んだこと（Learn）",
 };

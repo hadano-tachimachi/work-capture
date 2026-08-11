@@ -29,6 +29,7 @@ export const STRUCTURED_ITEM_TYPES = [
   "uncertainty",
   "project_candidate",
   "context_candidate",
+  "learn_ref",
 ] as const;
 
 export type StructuredItemType = (typeof STRUCTURED_ITEM_TYPES)[number];
@@ -68,4 +69,18 @@ export function structuredOutputToItems(
   pushMany("context_candidate", data.context_candidates);
 
   return items;
+}
+
+/** Learn 参照を structured_items へ追加する（AI出力とは別に保存） */
+export function learnReferencesToItems(
+  lines: string[]
+): Array<{ type: StructuredItemType; content: string; sortOrder: number }> {
+  return lines
+    .map((content) => content.trim())
+    .filter(Boolean)
+    .map((content, index) => ({
+      type: "learn_ref" as const,
+      content,
+      sortOrder: 10_000 + index,
+    }));
 }

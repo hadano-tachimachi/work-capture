@@ -10,6 +10,7 @@ import {
 import { ProviderNotConfiguredError } from "@/lib/ai/types";
 import { getDb, getTables } from "@/lib/db";
 import {
+  learnReferencesToItems,
   structuredOutputSchema,
   structuredOutputToItems,
 } from "@/lib/validation/structure-schema";
@@ -17,7 +18,12 @@ import {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { captureId, transcript, provider: providerRaw } = body;
+    const {
+      captureId,
+      transcript,
+      provider: providerRaw,
+      kind: kindHint,
+    } = body;
     const provider = parseAiProvider(providerRaw) ?? getDefaultProvider();
 
     if (!captureId || !transcript?.trim()) {
@@ -34,14 +40,24 @@ export async function POST(request: Request) {
     let parsed: unknown = null;
     let validationStatus = "failed";
     let validationErrors: unknown = null;
+    let learnKind: string | null = null;
+    let learnReferences: Array<{
+      projectId: string;
+      projectTitle: string;
+      line: string;
+    }> = [];
 
     let modelName = getActiveModelName(provider);
 
     try {
-      const result = await structureTranscript(transcript, provider);
+      const result = await structureTranscript(transcript, provider, {
+        kindHint: typeof kindHint === "string" ? kindHint : null,
+      });
       rawOutput = result.rawOutput;
       parsed = result.parsed;
       modelName = result.modelName;
+      learnKind = result.learnKind ?? null;
+      learnReferences = result.learnReferences ?? [];
 
       const validation = structuredOutputSchema.safeParse(parsed);
       if (validation.success) {
@@ -50,7 +66,10 @@ export async function POST(request: Request) {
           .delete(structuredItems)
           .where(eq(structuredItems.workCaptureId, captureId));
 
-        const items = structuredOutputToItems(validation.data);
+        const items = [
+          ...structuredOutputToItems(validation.data),
+          ...learnReferencesToItems(learnReferences.map((ref) => ref.line)),
+        ];
         if (items.length > 0) {
           await db.insert(structuredItems).values(
             items.map((item) => ({
@@ -95,6 +114,8 @@ export async function POST(request: Request) {
       validationStatus,
       validationErrors,
       parsed,
+      learnKind,
+      learnReferences,
     });
   } catch (error) {
     if (error instanceof ProviderNotConfiguredError) {

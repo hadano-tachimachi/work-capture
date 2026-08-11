@@ -10,7 +10,8 @@ import { getModelName } from "@/lib/ai/providers/config";
 const MODEL = getModelName("openai");
 
 export async function structureWithOpenAI(
-  transcript: string
+  transcript: string,
+  learnSection?: string | null
 ): Promise<StructureResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY is not set");
@@ -25,7 +26,7 @@ export async function structureWithOpenAI(
       model: MODEL,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: STRUCTURE_USER_PROMPT(transcript) },
+        { role: "user", content: STRUCTURE_USER_PROMPT(transcript, new Date(), learnSection) },
       ],
       response_format: {
         type: "json_schema",

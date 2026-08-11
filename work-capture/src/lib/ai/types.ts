@@ -6,6 +6,12 @@ export type StructureResult = {
   rawOutput: string;
   parsed: unknown;
   modelName: string;
+  learnKind?: string | null;
+  learnReferences?: Array<{
+    projectId: string;
+    projectTitle: string;
+    line: string;
+  }>;
 };
 
 export type ProviderInfo = {

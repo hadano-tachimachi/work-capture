@@ -80,6 +80,7 @@ export function ReviewView({ captureId }: ReviewViewProps) {
   const purpose = getByType("purpose")[0] ?? "";
   const backgrounds = getByType("background");
   const uncertainties = getByType("uncertainty");
+  const learnRefs = getByType("learn_ref");
 
   if (loading) {
     return (
@@ -157,6 +158,22 @@ export function ReviewView({ captureId }: ReviewViewProps) {
           <SectionCard
             label={ITEM_TYPE_LABELS.background}
             preview={backgrounds.join(" / ")}
+            interactive={false}
+          />
+        )}
+
+        {learnRefs.length > 0 && (
+          <SectionCard
+            label={ITEM_TYPE_LABELS.learn_ref}
+            preview={
+              <ul className="space-y-2">
+                {learnRefs.map((line, i) => (
+                  <li key={i} className="text-sm leading-relaxed">
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            }
             interactive={false}
           />
         )}

@@ -1,6 +1,6 @@
-export const PROMPT_VERSION = "v1.2.0";
+export const PROMPT_VERSION = "v1.3.0";
 
-export const SYSTEM_PROMPT = `あなたは Work Capture の情報整理担当です。
+export const SYSTEM_PROMPT = `あなたは Work Loop の情報整理担当です。
 あなたの役割は判断ではなく、入力文を仕事として扱える形へ構造化することです。
 
 ## 禁止事項
@@ -33,6 +33,11 @@ export const SYSTEM_PROMPT = `あなたは Work Capture の情報整理担当で
 - 「今週中」は今週金曜日として解釈する。「今日中」は「今日の日付」そのものであり、「今週中」と混同しない
 - 解釈が曖昧なら uncertainties に記載する
 
+## Learn（過去実績の参照）
+- ユーザープロンプトに「過去の同種の仕事から得た学び」がある場合、action_plan の順序や notes での所要時間の目安に活かしてよい
+- 過去実績の内容を、今回の入力にないタスク・人名として追加しない
+- 学びを反映する場合は、notes に「過去の同種では〜だった」程度の短い示唆として残してよい（断定しない）
+
 不明なものは null または空配列にしてください。`;
 
 const WEEKDAY_JA = ["日", "月", "火", "水", "木", "金", "土"];
@@ -47,9 +52,25 @@ function formatTodayContext(referenceDate: Date = new Date()): string {
 
 export const STRUCTURE_USER_PROMPT = (
   transcript: string,
-  referenceDate: Date = new Date()
-) =>
-  `今日の日付: ${formatTodayContext(referenceDate)}\n\n以下の文字起こし本文を構造化してください。\n\n---\n${transcript}\n---`;
+  referenceDate: Date = new Date(),
+  learnSection?: string | null
+) => {
+  const parts = [
+    `今日の日付: ${formatTodayContext(referenceDate)}`,
+    "",
+    "以下の文字起こし本文を構造化してください。",
+    "",
+    "---",
+    transcript,
+    "---",
+  ];
+
+  if (learnSection?.trim()) {
+    parts.push("", learnSection.trim());
+  }
+
+  return parts.join("\n");
+};
 
 export const TRANSCRIBE_PROMPT =
   "この音声を日本語で文字起こししてください。話し言葉をそのまま書き起こし、余計な説明や前置きは加えないでください。";
